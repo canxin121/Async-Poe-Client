@@ -1,6 +1,6 @@
 # Async-Poe-Client
 todo  
-- explore bot
+- explore third_party bots
 - delete bot
 
 ```python
