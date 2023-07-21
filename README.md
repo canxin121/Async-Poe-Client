@@ -1,4 +1,7 @@
 # Async-Poe-Client
+todo  
+- explore bot
+- delete bot
 
 ```python
 import asyncio
