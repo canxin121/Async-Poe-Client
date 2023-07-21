@@ -1,5 +1,5 @@
 # Async-Poe-Client
-Async Client for poe.com
+
 ```python
 import asyncio
 
