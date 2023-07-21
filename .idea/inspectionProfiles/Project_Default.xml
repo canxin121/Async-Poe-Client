@@ -1,0 +1,49 @@
+<component name="InspectionProjectProfileManager">
+  <profile version="1.0">
+    <option name="myName" value="Project Default" />
+    <inspection_tool class="DuplicatedCode" enabled="true" level="WEAK WARNING" enabled_by_default="true">
+      <Languages>
+        <language minSize="54" name="Python" />
+      </Languages>
+    </inspection_tool>
+    <inspection_tool class="Eslint" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="PyPackageRequirementsInspection" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="ignoredPackages">
+        <value>
+          <list size="16">
+            <item index="0" class="java.lang.String" itemvalue="httpx" />
+            <item index="1" class="java.lang.String" itemvalue="pydantic" />
+            <item index="2" class="java.lang.String" itemvalue="EdgeGPT" />
+            <item index="3" class="java.lang.String" itemvalue="python_markdown_math" />
+            <item index="4" class="java.lang.String" itemvalue="poe" />
+            <item index="5" class="java.lang.String" itemvalue="bidict" />
+            <item index="6" class="java.lang.String" itemvalue="Requests" />
+            <item index="7" class="java.lang.String" itemvalue="imgkit" />
+            <item index="8" class="java.lang.String" itemvalue="charset_normalizer" />
+            <item index="9" class="java.lang.String" itemvalue="fastapi" />
+            <item index="10" class="java.lang.String" itemvalue="slack_sdk" />
+            <item index="11" class="java.lang.String" itemvalue="Pygments" />
+            <item index="12" class="java.lang.String" itemvalue="bardapi" />
+            <item index="13" class="java.lang.String" itemvalue="aiohttp" />
+            <item index="14" class="java.lang.String" itemvalue="uvicorn" />
+            <item index="15" class="java.lang.String" itemvalue="Markdown" />
+          </list>
+        </value>
+      </option>
+    </inspection_tool>
+    <inspection_tool class="PyPep8Inspection" enabled="true" level="WEAK WARNING" enabled_by_default="true">
+      <option name="ignoredErrors">
+        <list>
+          <option value="E501" />
+        </list>
+      </option>
+    </inspection_tool>
+    <inspection_tool class="PyPep8NamingInspection" enabled="true" level="WEAK WARNING" enabled_by_default="true">
+      <option name="ignoredErrors">
+        <list>
+          <option value="N801" />
+        </list>
+      </option>
+    </inspection_tool>
+  </profile>
+</component>
