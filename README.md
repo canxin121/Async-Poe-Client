@@ -9,8 +9,8 @@ QA:
   1.对于系统的自带的bot,你在poe网页上看到的bot的名称和url_name永远相等(
   但是都不等于handle)  
   2.对于自己创建的bot,url_name =
-  handle,如果设置了display_name,那么在网页上看到的名字是display_name,如果没设置,看到的就是url_name(handle)
-  但是有特殊的情况下handle并不遵循上面的规律,比如使用get_available_bots实际上是url_botname
+  handle,如果设置了display_name,那么在网页上看到的名字是display_name,如果没设置,看到的就是url_name(handle)  
+  但是有特殊的情况下handle并不遵循上面的规律,比如使用get_available_bots得到的所有bot的handle都永远等于url_botname
 
 ## 步骤1：导入库并创建Poe_Client对象
 
