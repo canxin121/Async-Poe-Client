@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "async-poe-client"
+version = "0.1.0"
+description = "A stable and fast async client for poe.com"
+authors = ["canxin <1969730106@qq.com>"]
+readme = "README.md"
+packages = [{ include = "async_poe_client" }]
+
+[tool.poetry.dependencies]
+python = "3.7"
+loguru = "^0.7.0"
+websockets = "^11.0.3"
+httpx = "^0.24.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
