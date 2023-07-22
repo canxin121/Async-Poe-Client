@@ -1,6 +1,9 @@
 # 使用指南
 
-这是如何使用`Poe_Client`库的指南。在开始之前，请确保你已经安装了这个库。
+这是如何使用`async-poe-Client`库的指南。在开始之前，请确保你已经安装了这个库。
+```
+pip install async-poe-client
+```
 
 ## 目录
 - [QA](#qa)
