@@ -27,7 +27,6 @@ poe_client = await Poe_Client("your p_b token").create()
 
 ## 步骤2：使用Poe_Client
 
-在创建了`Poe_Client`后，你就可以使用它进行非常多的操作.
 ---
 
 ### 1.获取账号的订阅信息
