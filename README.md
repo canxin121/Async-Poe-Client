@@ -31,6 +31,8 @@ poe_client = await Poe_Client("your p_b token").create()
 
 ### 1.获取账号的订阅信息
 
+直接获取属性值即可
+
 ```python
 print(poe_client.subscription)
 ```
@@ -39,7 +41,8 @@ print(poe_client.subscription)
 
 ### 2.获取账号上所有的可以使用的bot的信息
 
-注意获取的顺序是从上到下,按照poe.com首页的顺序获取的,既能获取系统自带的bot,也可以获取自己创建的bot  
+注意获取的顺序是从上到下,按照poe.com首页的顺序获取的,既能获取系统自带的bot,也可以获取自己创建的bot
+
 函数:get_available_bots()
 
 参数:
@@ -66,31 +69,33 @@ print(bots)
 
 ### 3.创建一个bot
 
-以下是所有可传递的参数
+函数:create_bot()
 
-以下是参数的类型注释和选项说明：
+参数:
 
 - `handle: str` - 新 bot 的名称，必须是字符串类型,而且这个名字在整个poe.com中都必须是唯一的,和别人的重名也不行。
 - `prompt: str = ""` - 新 bot 的预设人格，可选字符串类型，默认为空字符串。
-- `display_name: Optional[str] = None` - 新 bot 的显示名称，可选字符串类型，默认为None。如果不传递，将显示handle。
+- `display_name: Optional[str] = `None`` - 新 bot 的显示名称，可选字符串类型，默认为`None`。如果不传递，将显示handle。
 - `base_model: str = "chinchilla"` - 新 bot 使用的模型，可选字符串类型。选项包括："chinchilla" (ChatGPT) 或 "a2" (Claude)
   。如果已经订阅，可以使用 "beaver" (ChatGPT4) 或 "a2_2" (Claude-2-100k)。
 - `description: str = ""` - 新 bot 的描述，可选字符串类型，默认为空字符串。
 - `intro_message: str = ""` - 新 bot 的介绍信息，可选字符串类型。如果这是一个空字符串，则 bot 将没有介绍信息。
 - `prompt_public: bool = True` - 预设人格是否应公开可见，可选布尔类型，默认为True。
-- `profile_picture_url: Optional[str] = None` - bot 的个人资料图片的 URL，可选字符串类型，默认为None。使用这个库实际上无法上传自定义图像。
+- `profile_picture_url: Optional[str] = `None`` - bot 的个人资料图片的 URL，可选字符串类型，默认为`None`。使用这个库实际上无法上传自定义图像。
 - `linkification: bool = False` - bot 是否应将响应中的某些文本转化为可点击的链接，可选布尔类型，默认为False。
 - `markdown_rendering: bool = True` - bot 的响应是否启用 markdown 渲染，可选布尔类型，默认为True。
 - `suggested_replies: bool = False` - bot 是否应在每次响应后建议可能的回复，可选布尔类型，默认为False。
 - `private: bool = False` - bot 是否应为私人的，可选布尔类型，默认为False。
-- `temperature: Optional[float] = None` - 新 bot 的温度，可选浮点数类型，默认为None。
+- `temperature: Optional[float] = `None`` - 新 bot 的温度，可选浮点数类型，默认为`None`。
 
 如果你希望新的 bot 使用你自己的 API（在[这里](https://github.com/poe-platform/api-bot-tutorial)可以获取poe官方的接入教程），请使用以下参数：
 
 - `api_bot = False` - bot 是否是 自己的API bot。
-- `api_key = None` - 新 bot 的 API 密钥。
-- `api_url = None` - 新 bot 的 API URL。
-  最简单的用例如下,只需要传递
+- `api_key = `None`` - 新 bot 的 API 密钥。
+- `api_url = `None`` - 新 bot 的 API URL。
+  返回值:`None`
+
+最简单的用例如下,只需要传递hanlde和prompt就可以创建一个bot
 
 ```python
 await poe_client.create_bot(handle="testbotcx1", prompt="a ai assistant", p)
@@ -98,31 +103,32 @@ await poe_client.create_bot(handle="testbotcx1", prompt="a ai assistant", p)
 
 ### 3.修改一个bot的设置
 
-以下为参数:
+函数:edit_bot()
 
+参数:  
 注意下面只有url_botname是bot原来的名字,其他的都是要修改成的参数,如果不传递,则这个参数会保持不变
 
 - `url_botname: str` - 所要修改的bot的url_name，必须是字符串类型。
 - `handle: Optional[str]` - bot 的名称，必须是字符串类型，且在整个poe.com中必须是唯一的，不能与其他bot重名。
 - `prompt: Optional[str] = ""` - bot 的预设人格，可选字符串类型，默认为空字符串。
-- `display_name: Optional[str] = None` - bot 的显示名称，可选字符串类型，默认为None。如果不传递，将显示handle。
+- `display_name: Optional[str] = `None`` - bot 的显示名称，可选字符串类型，默认为`None`。如果不传递，将显示handle。
 - `base_model: Optional[str] = "chinchilla"` - bot 使用的模型，可选字符串类型。选项包括："chinchilla" (ChatGPT) 或 "a2" (
   Claude)。如果已经订阅，可以使用 "beaver" (ChatGPT4) 或 "a2_2" (Claude-2-100k)。
 - `description: Optional[str] = ""` - bot 的描述，可选字符串类型，默认为空字符串。
 - `intro_message: Optional[str] = ""` - bot 的介绍信息，可选字符串类型。如果这是一个空字符串，则 bot 将没有介绍信息。
 - `prompt_public: Optional[bool] = True` - 预设人格是否应公开可见，可选布尔类型，默认为True。
-- `profile_picture_url: Optional[str] = None` - bot 的个人资料图片的 URL，可选字符串类型，默认为None。使用这个库实际上无法上传自定义图像。
+- `profile_picture_url: Optional[str] = `None`` - bot 的个人资料图片的 URL，可选字符串类型，默认为`None`。使用这个库实际上无法上传自定义图像。
 - `linkification: Optional[bool] = False` - bot 是否应将响应中的某些文本转化为可点击的链接，可选布尔类型，默认为False。
 - `markdown_rendering: Optional[bool] = True` - bot 的响应是否启用 markdown 渲染，可选布尔类型，默认为True。
 - `suggested_replies: Optional[bool] = False` - bot 是否应在每次响应后建议可能的回复，可选布尔类型，默认为False。
 - `private: Optional[bool] = False` - bot 是否应为私人的，可选布尔类型，默认为False。
-- `temperature: Optional[float] = None` - bot 的温度，可选浮点数类型，默认为None。
+- `temperature: Optional[float] = `None`` - bot 的温度，可选浮点数类型，默认为`None`。
 
 如果你希望新的 bot 使用你自己的 API（在[这里](https://github.com/poe-platform/api-bot-tutorial)可以获取poe官方的接入教程），请使用以下参数：
 
 - `api_bot = False` - bot 是否是 自己的API bot。
-- `api_key = None` - 新 bot 的 API 密钥。
-- `api_url = None` - 新 bot 的 API URL。
+- `api_key = `None`` - 新 bot 的 API 密钥。
+- `api_url = `None`` - 新 bot 的 API URL。
 
 ```python
 await poe_client.edit_bot(url_botname="test27gs", handle="test27gs2", prompt="a computer programmer")
@@ -130,11 +136,15 @@ await poe_client.edit_bot(url_botname="test27gs", handle="test27gs2", prompt="a 
 
 ### 3.删除一个bot
 
+注意,这个操作是不可逆的!
+
+函数:delete_bot()
+
 参数:
 
 - `url_botname:str` - bot的url名
 
-注意,这个操作是不可逆的!
+返回值:`None`
 
 ```python
 await poe_client.delete_bot(url_botname="test27gs2")
@@ -185,7 +195,7 @@ print(answer)
 
 - `url_botname:str` - 要清除记忆的bot的url_botname
 
-返回值:None
+返回值:`None`
 
 ```python
 await poe_client.send_chat_break(url_botname="Assistant")
@@ -223,7 +233,7 @@ print(bots)
 - ` count: Optional[int] = 2` - 要删除的bot的数量(注意这并不能删除系统的bot,所以该数量和实际删除的数量并不相等)
 - `del_all: Optional[bool] = False` - 是否直接删除所有的bot(注意删除所有bot的时间可能很长,这取决于你的bot的数量)
 
-返回值:None
+返回值:`None`
 
 ```python
 await poe_client.delete_available_bots(count=2)
@@ -295,7 +305,7 @@ print(messages)
 - ` count: Optional[int] = 2` - 要删除的消息的数量
 - `del_all: Optional[bool] = False` - 是否直接删除所有的和该bot的聊天消息
 
-返回值:None
+返回值:`None`
 
 ```python
 await poe_client.delete_bot_conversation(url_botname="Assistant", count=2)
@@ -306,7 +316,7 @@ await poe_client.delete_bot_conversation(url_botname="Assistant", del_all=True)
 
 函数:delete_all_conversations()  
 无参数  
-返回值:None
+返回值:`None`
 
 ```python
 await poe_client.delete_all_conversations()
