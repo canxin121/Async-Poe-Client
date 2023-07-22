@@ -4,7 +4,7 @@
 
 QA:
 
-- 一.url_botname是什么? -> 在使用poe的某个bot时,链接中的bot的名称("https://poe.com/ChatGPT" 中是 'ChatGPT').
+- 一.url_botname是什么? -> 在使用poe的某个bot时,链接中的bot的名称("https://poe.com/ChatGPT" 中是 'ChatGPT').  
   这个url_botname和其他name的关系可以理解为:  
   1.对于系统的自带的bot,你在poe网页上看到的bot的名称和url_name永远相等(
   但是都不等于handle)  
