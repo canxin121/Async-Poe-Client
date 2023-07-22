@@ -30,7 +30,7 @@ async def test_get_available_bots():
 
 @pytest.mark.asyncio
 async def test_stream_ask():
-    poe_client = await Poe_Client("xGle8cZ_Nlo2fyEgpmpPrA%3D%3D").create()
+    poe_client = await Poe_Client("your p_b token").create()
     bots = await poe_client.get_available_bots(count=2)
     async for message in poe_client.ask_stream(url_botname=bots[0]['handle'], question="introduce websockets",
                                                suggest_able=True):
@@ -54,17 +54,17 @@ async def test_chatbreak():
 async def test_bot_operations():
     poe_client = await Poe_Client("your p_b token").create()
     # the handle when creating becomes the url_botname that to be used
-    await poe_client.create_bot(handle="test27gs", prompt="a ai assistant")
+    await poe_client.create_bot(handle="test27gss", prompt="a ai assistant")
     # change "test27gs" to test27gs2, and prompt changed too, but other config keep unchanged
-    await poe_client.edit_bot(url_botname="test27gs", handle="test27gs2", prompt="a computer programmer")
+    await poe_client.edit_bot(url_botname="test27gss", handle="test27gs2s", prompt="a computer programmer")
     # delete the bot by the new_name
-    await poe_client.delete_bot(url_botname="test27gs2")
+    await poe_client.delete_bot(url_botname="test27gs2s")
 
 
 @pytest.mark.asyncio
 async def test_delete_available_bots():
     """caution, this will permanently delete your bots"""
-    poe_client = await Poe_Client("xGle8cZ_Nlo2fyEgpmpPrA%3D%3D").create()
+    poe_client = await Poe_Client("your p_b token").create()
     await poe_client.delete_available_bots(count=2)
     await poe_client.delete_available_bots(del_all=True)
 
@@ -72,9 +72,9 @@ async def test_delete_available_bots():
 @pytest.mark.asyncio
 async def test_get_bot_data_and_info():
     poe_client = await Poe_Client("your p_b token").create()
-    data = await poe_client.get_botdata(url_botname="578feb1716fe43f")
+    data = await poe_client.get_botdata(url_botname="test27gs2s")
     print(data)
-    config = await poe_client.get_bot_info(url_botname="578feb1716fe43f")
+    config = await poe_client.get_bot_info(url_botname="test27gs2s")
     print(config)
 
 
