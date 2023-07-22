@@ -2,7 +2,29 @@
 
 这是如何使用`Poe_Client`库的指南。在开始之前，请确保你已经安装了这个库。
 
-QA:
+## 目录
+- [QA](#qa)
+- [步骤1: 导入库并创建Poe_Client对象](#步骤1导入库并创建poeclient对象)
+- [步骤2: 使用Poe_Client](#步骤2使用poeclient)
+    - [1. 获取账号的订阅信息](#1获取账号的订阅信息)
+    - [2. 获取账号上所有的可以使用的bot的信息](#2获取账号上所有的可以使用的bot的信息)
+    - [3. 创建一个bot](#3创建一个bot)
+    - [4. 修改一个bot的设置](#4修改一个bot的设置)
+    - [5. 删除一个bot](#5删除一个bot)
+    - [6. 和bot对话](#6和bot对话)
+        - [(1). 使用websockets和httpx的支持流式输出和建议回复的函数](#1使用websockets和httpx的支持流式输出和建议回复的函数)
+        - [(2). 仅使用httpx的不支持建议回复和流式输出的函数](#2仅使用httpx的不支持建议回复和流式输出的函数)
+    - [7. 删除bot的对话记忆,重置对话(这并不会删除聊天记录中的消息)](#7删除bot的对话记忆重置对话这并不会删除聊天记录中的消息)
+    - [8. 查询自己的可用的bot](#8查询自己的可用的bot)
+    - [9. 批量删除自己可用的bot](#9批量删除自己可用的bot)
+    - [10. 获取bot的部分数据或设置信息](#10获取bot的部分数据或设置信息)
+    - [11. 获取聊天记录(聊天消息)](#11获取聊天记录聊天消息)
+    - [12. 删除聊天记录(聊天消息)](#12删除聊天记录聊天消息)
+        - [(1). 删除和某个bot的聊天记录](#1-删除和某个bot的聊天记录)
+        - [(2). 删除和所有bot的所有聊天记录](#2-删除和所有bot的所有聊天记录)
+    - [13. 获取其他人创建的bot(poe.com左上角explor中的bot)](#13获取其他人创建的botpoecom左上角explor中的bot)
+
+# QA:
 
 - 一.url_botname是什么? -> 在使用poe的某个bot时,链接中的bot的名称("https://poe.com/ChatGPT" 中是 'ChatGPT').  
   这个url_botname和其他name的关系可以理解为:  
@@ -30,6 +52,7 @@ poe_client = await Poe_Client("your p_b token").create()
 在创建了`Poe_Client`后，你就可以使用它进行非常多的操作.
 
 ---
+
 ### 1.获取账号的订阅信息
 
 直接获取属性值即可
@@ -41,6 +64,7 @@ print(poe_client.subscription)
 返回的是一个dict格式的订阅信息
 
 ---
+
 ### 2.获取账号上所有的可以使用的bot的信息
 
 注意获取的顺序是从上到下,按照poe.com首页的顺序获取的,既能获取系统自带的bot,也可以获取自己创建的bot
@@ -70,6 +94,7 @@ print(bots)
 ```
 
 ---
+
 ### 3.创建一个bot
 
 函数:create_bot()
@@ -84,7 +109,8 @@ print(bots)
 - `description: str = ""` - 新 bot 的描述，可选字符串类型，默认为空字符串。
 - `intro_message: str = ""` - 新 bot 的介绍信息，可选字符串类型。如果这是一个空字符串，则 bot 将没有介绍信息。
 - `prompt_public: bool = True` - 预设人格是否应公开可见，可选布尔类型，默认为True。
-- `profile_picture_url: Optional[str] = `None`` - bot 的个人资料图片的 URL，可选字符串类型，默认为`None`。使用这个库实际上无法上传自定义图像。
+- `profile_picture_url: Optional[str] = `None`` - bot 的个人资料图片的 URL，可选字符串类型，默认为`None`
+  。使用这个库实际上无法上传自定义图像。
 - `linkification: bool = False` - bot 是否应将响应中的某些文本转化为可点击的链接，可选布尔类型，默认为False。
 - `markdown_rendering: bool = True` - bot 的响应是否启用 markdown 渲染，可选布尔类型，默认为True。
 - `suggested_replies: bool = False` - bot 是否应在每次响应后建议可能的回复，可选布尔类型，默认为False。
@@ -105,6 +131,7 @@ await poe_client.create_bot(handle="testbotcx1", prompt="a ai assistant", p)
 ```
 
 ---
+
 ### 4.修改一个bot的设置
 
 函数:edit_bot()
@@ -121,7 +148,8 @@ await poe_client.create_bot(handle="testbotcx1", prompt="a ai assistant", p)
 - `description: Optional[str] = ""` - bot 的描述，可选字符串类型，默认为空字符串。
 - `intro_message: Optional[str] = ""` - bot 的介绍信息，可选字符串类型。如果这是一个空字符串，则 bot 将没有介绍信息。
 - `prompt_public: Optional[bool] = True` - 预设人格是否应公开可见，可选布尔类型，默认为True。
-- `profile_picture_url: Optional[str] = `None`` - bot 的个人资料图片的 URL，可选字符串类型，默认为`None`。使用这个库实际上无法上传自定义图像。
+- `profile_picture_url: Optional[str] = `None`` - bot 的个人资料图片的 URL，可选字符串类型，默认为`None`
+  。使用这个库实际上无法上传自定义图像。
 - `linkification: Optional[bool] = False` - bot 是否应将响应中的某些文本转化为可点击的链接，可选布尔类型，默认为False。
 - `markdown_rendering: Optional[bool] = True` - bot 的响应是否启用 markdown 渲染，可选布尔类型，默认为True。
 - `suggested_replies: Optional[bool] = False` - bot 是否应在每次响应后建议可能的回复，可选布尔类型，默认为False。
@@ -139,6 +167,7 @@ await poe_client.edit_bot(url_botname="test27gs", handle="test27gs2", prompt="a 
 ```
 
 ---
+
 ### 5.删除一个bot
 
 注意,这个操作是不可逆的!
@@ -156,6 +185,7 @@ await poe_client.delete_bot(url_botname="test27gs2")
 ```
 
 ---
+
 ### 6.和bot对话
 
 #### (1).使用websockets和httpx的支持流式输出和建议回复的函数
@@ -194,6 +224,7 @@ print(answer)
 ```
 
 ---
+
 ### 7.删除bot的对话记忆,重置对话(这并不会删除聊天记录中的消息)
 
 函数:send_chat_break()
@@ -209,6 +240,7 @@ await poe_client.send_chat_break(url_botname="Assistant")
 ```
 
 ---
+
 ### 8.查询自己的可用的bot
 
 注意查询的顺序是按照poe.com左侧边栏的顺序从上往下查询的  
@@ -230,6 +262,7 @@ print(bots)
 ```
 
 ---
+
 ### 9.批量删除自己可用的bot
 
 注意删除顺序是按照poe.com左侧边栏的顺序从上往下查询的,并且如果碰到系统自带的bot,会直接跳过,但是也计算在数量之中了
@@ -250,6 +283,7 @@ await poe_client.delete_available_bots(del_all=True)
 ```
 
 ---
+
 ### 10.获取bot的部分数据或设置信息
 
 函数: get_botdata()
@@ -281,6 +315,7 @@ print(info)
 ```
 
 ---
+
 ### 11.获取聊天记录(聊天消息)
 
 注意获取的顺序是由最近到之前,但是输出时是先输出先前的,在输出现在的,也就是和你在网页上向上滑动的操作完全相同
@@ -303,6 +338,7 @@ print(messages)
 ```
 
 ---
+
 ### 12.删除聊天记录(聊天消息)
 
 注意: 这个操作是不可逆的!
@@ -335,6 +371,7 @@ await poe_client.delete_all_conversations()
 ```
 
 ---
+
 ### 13.获取其他人创建的bot(poe.com左上角explor中的bot)
 
 注意获取的顺序是从上到下,按照poe.com首页的顺序获取的,既能获取系统自带的bot,也可以获取自己创建的bot
