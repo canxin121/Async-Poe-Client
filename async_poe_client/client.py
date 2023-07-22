@@ -768,7 +768,6 @@ class Poe_Client:
             human_message_id = await self.send_message(
                 url_botname, question, with_chat_break
             )
-            logger.info(f"Succeed to send message to{url_botname}")
             last_text = ""
             message = None
             while True:
