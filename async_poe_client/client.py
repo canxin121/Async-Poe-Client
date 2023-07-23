@@ -7,10 +7,9 @@ import time
 import uuid
 from typing import List, Union, AsyncGenerator, Optional, Any
 
-import httpx
-import websockets
+import aiohttp
+from aiohttp_socks import ProxyConnector
 from loguru import logger
-from websockets.client import connect
 
 from .util import (
     HOME_URL,
@@ -20,15 +19,16 @@ from .util import (
     CONST_NAMESPACE,
     generate_data,
     QUERIES,
-    generate_nonce,
+    generate_nonce, extract_formkey,
 )
+
+Websocket_Use_Count = 0
 
 
 class Poe_Client:
-    def __init__(self, p_b: str):
+    def __init__(self, p_b: str, proxy: str = ""):
         self.bots: dict = {}
         self.bot_list_url: str = ""
-        self.client = httpx.AsyncClient()
         self.formkey: str = ""
         self.home_bot_list: List[str] = []
         self.next_data: dict = {}
@@ -39,13 +39,14 @@ class Poe_Client:
         self.user_id: str = ""
         self.viewer: dict = {}
         self.ws_domain = f"tch{random.randint(1, int(1e6))}"[:8]
-        self.client.headers = {
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+        self.proxy = proxy
+        self.headers = {
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
             'Accept-Encoding': 'gzip, deflate, br',
             'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6',
             'Cache-Control': 'max-age=0',
             "Cookie": f"p-b={self.p_b}; SL_G_WPT_TO=zh-CN; SL_GWPT_Show_Hide_tmp=1; SL_wptGlobTipTmp=1;",
-            'Sec-Ch-Ua': '"Microsoft Edge";v="117", "Not;A=Brand";v="8", "Chromium";v="117"',
+            'Sec-Ch-Ua': '"Microsoft Edge";v="117", "Not;A Brand";v="8", "Chromium";v="117"',
             'Sec-Ch-Ua-Mobile': '?0',
             'Sec-Ch-Ua-Platform': '"Windows"',
             'Sec-Fetch-Dest': 'document',
@@ -56,7 +57,16 @@ class Poe_Client:
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36 Edg/117.0.0.0',
         }
 
-        self.client.cookies = {"p-b": f"{self.p_b}"}
+    @property
+    def session_args(self):
+        args = {
+            'headers': self.headers,
+            'cookies': {"p-b": self.p_b},
+        }
+        if self.proxy:
+            connector = ProxyConnector.from_url(self.proxy)
+            args['connector'] = connector
+        return args
 
     async def get_basedata(self) -> None:
         """
@@ -67,7 +77,9 @@ class Poe_Client:
             Raises a ValueError if it fails to extract 'next_data', 'viewer', 'user_id', or 'formkey' from the response.
         """
         try:
-            response = await self.client.get(HOME_URL)
+            async with aiohttp.ClientSession(**self.session_args) as client:
+                response = await client.get(HOME_URL)
+                text = await response.text()
         except Exception as e:
             raise Exception("Failed to get basedata from home.") from e
         try:
@@ -75,7 +87,7 @@ class Poe_Client:
             json_regex = (
                 r'<script id="__NEXT_DATA__" type="application\/json">(.+?)</script>'
             )
-            json_text = re.search(json_regex, response.text).group(1)
+            json_text = re.search(json_regex, text).group(1)
             self.next_data = json.loads(json_text)
         except Exception as e:
             raise ValueError("Failed to extract 'next_data' from the response.") from e
@@ -100,18 +112,8 @@ class Poe_Client:
         """extract formkey from response html"""
         # by @aditiaryan and @ading2210
         try:
-            script_regex = r"<script>var.*?;</script>"
-            script_text = re.findall(script_regex, response.text)[0]
-            key_regex = r'var [a-zA-Z]+="(.*?)",[a-zA-Z]=Array'
-            key = re.search(key_regex, script_text).group(1)
-            cipher_regex = r".\[(\d+)\]=.\[(\d+)\]"
-            cipher_pairs = re.findall(cipher_regex, script_text)
-            formkey_list = [""] * len(cipher_pairs)
-            for pair in cipher_pairs:
-                formkey_index, key_index = map(int, pair)
-                formkey_list[formkey_index] = key[key_index]
-            self.formkey = "".join(formkey_list)[:-1]
-            self.client.headers.update({"poe-formkey": self.formkey})
+            self.formkey = extract_formkey(text)
+            self.headers["poe-formkey"] = self.formkey
         except AttributeError as e:
             raise ValueError(
                 "Failed to extract 'formkey' from the response text."
@@ -125,10 +127,12 @@ class Poe_Client:
             Raises a ValueError if it fails to extract the channel data from the response.
         """
         try:
-            response = await self.client.get(SETTING_URL)
-            json_data = response.json()
-            self.tchannel_data = json_data["tchannelData"]
-            self.client.headers.update({"Poe-Tchannel": self.tchannel_data["channel"]})
+            async with aiohttp.ClientSession(**self.session_args) as client:
+                response = await client.get(SETTING_URL)
+                data = await response.text()
+                json_data = json.loads(data)
+                self.tchannel_data = json_data["tchannelData"]
+                self.headers["Poe-Tchannel"] = self.tchannel_data["channel"]
         except Exception as e:
             raise ValueError("Failed to extract tchannel from response.") from e
 
@@ -161,10 +165,10 @@ class Poe_Client:
         Note:
             This function should be called after creating a new Async_Poe_Client instance to ensure that all necessary data is fetched and set up.
         """
+
         await self.get_basedata()
         await self.get_channel_data()
         await self.get_bots()
-        await self.subscribe()
         logger.info("Succeed to create async_poe_client instance")
         return self
 
@@ -188,9 +192,12 @@ class Poe_Client:
         error = Exception("Unknown error")
         while retry > 0:
             try:
-                response = await self.client.get(url, timeout=3)
-                chat_data = response.json()["pageProps"]["data"]["chatOfBotHandle"]
-                return chat_data
+                async with aiohttp.ClientSession(**self.session_args) as client:
+                    response = await client.get(url, timeout=3)
+                    data = await response.text()  # noqa: E501
+                    json_data = json.loads(data)
+                    chat_data = json_data["pageProps"]["data"]["chatOfBotHandle"]
+                    return chat_data
             except Exception as e:
                 error = e
                 retry -= 1
@@ -211,9 +218,11 @@ class Poe_Client:
         """
         url = f'https://poe.com/_next/data/{self.next_data["buildId"]}/edit_bot.json?bot={url_botname}'
         try:
-            response = await self.client.get(url, timeout=3)
-            bot_info = response.json()
-            return bot_info["pageProps"]
+            async with aiohttp.ClientSession(**self.session_args) as client:
+                response = await client.get(url, timeout=3)
+                data = await response.text()
+                bot_info = json.loads(data)
+                return bot_info["pageProps"]
         except Exception as e:
             raise ValueError(f"Failed to get bot info from {url}. Make sure the bot is not deleted") from e
 
@@ -269,7 +278,7 @@ class Poe_Client:
         data = generate_data(query_name, variables)
         base_string = data + self.formkey + "Jb1hi3fg1MxZpzYfy"
         query_headers = {
-            **self.client.headers,
+            **self.headers,
             "content-type": "application/json",
             "poe-tag-id": hashlib.md5(base_string.encode()).hexdigest(),
         }
@@ -277,20 +286,22 @@ class Poe_Client:
         detail_error = Exception("unknown error")
         while retry:
             try:
-                if query_name == "recv":
-                    await self.client.post(
-                        GQL_RECV_URL, headers=query_headers, data=data
-                    )
-                    return None
-                else:
-                    response = await self.client.post(
-                        GQL_URL, data=data, headers=query_headers
-                    )
-                json_data = response.json()
-                if "success" in json_data.keys() and not json_data["success"]:
-                    detail_error = Exception(json_data["message"])
-                    raise detail_error
-                return json_data
+                async with aiohttp.ClientSession(**self.session_args) as client:
+                    if query_name == "recv":
+                        await client.post(
+                            GQL_RECV_URL, headers=query_headers, data=data
+                        )
+                        return None
+                    else:
+                        response = await client.post(
+                            GQL_URL, data=data, headers=query_headers
+                        )
+                    data = await response.text()
+                    json_data = json.loads(data)
+                    if "success" in json_data.keys() and not json_data["success"]:
+                        detail_error = Exception(json_data["message"])
+                        raise detail_error
+                    return json_data
             except Exception as e:
                 detail_error = e
                 logger.error(
@@ -697,6 +708,7 @@ class Poe_Client:
             This function uses HTTPX to send and receive messages. It doesn't support streaming and is not recommended if 'ask_stream' can be used.
 
         """
+        await self.subscribe()
         human_message_id = await self.send_message(
             url_botname, question, with_chat_break
         )
@@ -760,65 +772,61 @@ class Poe_Client:
 
         """
         ua = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36 Edg/117.0.0.0'
-        async with connect(
-                self.get_websocket_url(),
-                user_agent_header=ua,
-                close_timeout=0,
-                ping_timeout=3,
-                open_timeout=3,
-                timeout=3
-        ) as ws:  # noqa: E501
-            human_message_id = await self.send_message(
-                url_botname, question, with_chat_break
-            )
-            last_text = ""
-            message = None
-            yield_header = False
-            suggestion_list = []
-            while True:
-                try:
-                    raw_data = await ws.recv()
-                    message = json.loads(json.loads(raw_data)["messages"][-1])[
-                        "payload"
-                    ]["data"]["messageAdded"]
-                    if message["messageId"] > human_message_id:
-                        plain_text = message["text"][len(last_text):]
-                        last_text = message["text"]
-                        if (
-                                self.bots[url_botname]["defaultBotObject"][
-                                    "hasSuggestedReplies"
-                                ]
-                                and suggest_able
-                        ):
-                            suggestion_num = len(message["suggestedReplies"])
-                            if 0 < suggestion_num < 3:
-                                if not yield_header:
-                                    yield_header = True
-                                    yield "\n\nSuggested Reply:"
-                                suggestion_list.append(message['suggestedReplies'][-1])
-                                yield f"\n{str(suggestion_num)}:{message['suggestedReplies'][-1]}"
-                            elif suggestion_num >= 3:
-                                suggestion_list.append(message['suggestedReplies'][-1])
-                                self.bots[url_botname]["Suggestion"] = suggestion_list
-                                yield f"\n{str(suggestion_num)}:{message['suggestedReplies'][-1]}"
-                                break
+        async with aiohttp.ClientSession(headers={'User-Agent': ua}) as session:
+            async with session.ws_connect(self.get_websocket_url(), timeout=3, proxy=self.proxy) as ws:
+                global Websocket_Use_Count
+                if Websocket_Use_Count % 3 == 0:
+                    await self.subscribe()
+                    Websocket_Use_Count += 1
+                human_message_id = await self.send_message(
+                    url_botname, question, with_chat_break
+                )
+                last_text = ""
+                message = None
+                yield_header = False
+                suggestion_list = []
+                while True:
+                    try:
+                        raw_data = await ws.receive_json()
+                        message = json.loads(raw_data["messages"][-1])["payload"]["data"]["messageAdded"]  # noqa: E501
+                        if message["messageId"] > human_message_id:
+                            plain_text = message["text"][len(last_text):]
+                            last_text = message["text"]
+                            if (
+                                    self.bots[url_botname]["defaultBotObject"][
+                                        "hasSuggestedReplies"
+                                    ]
+                                    and suggest_able
+                            ):
+                                suggestion_num = len(message["suggestedReplies"])
+                                if 0 < suggestion_num < 3:
+                                    if not yield_header:
+                                        yield_header = True
+                                        yield "\n\nSuggested Reply:"
+                                    suggestion_list.append(message['suggestedReplies'][-1])
+                                    yield f"\n{str(suggestion_num)}:{message['suggestedReplies'][-1]}"
+                                elif suggestion_num >= 3:
+                                    suggestion_list.append(message['suggestedReplies'][-1])
+                                    self.bots[url_botname]["Suggestion"] = suggestion_list
+                                    yield f"\n{str(suggestion_num)}:{message['suggestedReplies'][-1]}"
+                                    break
+                                else:
+                                    yield plain_text
                             else:
-                                yield plain_text
-                        else:
-                            if message["state"] == "complete":
-                                yield plain_text
-                                break
-                            else:
-                                yield plain_text
-                except websockets.ConnectionClosed:
-                    break
-                except Exception as e:
-                    raise Exception(
-                        f"Failed to get message from {url_botname} through websockets:{str(e)}"
-                    ) from e
-            await self.send_recv(
-                url_botname, last_text, message["messageId"], human_message_id
-            )
+                                if message["state"] == "complete":
+                                    yield plain_text
+                                    break
+                                else:
+                                    yield plain_text
+                    except asyncio.exceptions.TimeoutError as e:
+                        raise Exception(f"Failed to get message from {url_botname} through websocket:{str(e)}") from e
+                    except Exception as e:
+                        raise Exception(
+                            f"Failed to get message from {url_botname} through websocket:{str(e)}"
+                        ) from e
+                await self.send_recv(
+                    url_botname, last_text, message["messageId"], human_message_id
+                )
 
     async def send_chat_break(self, url_botname: str) -> None:
         """
