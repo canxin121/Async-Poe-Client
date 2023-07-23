@@ -1,46 +1,52 @@
-# 使用指南
+# User Guide
 
-这是如何使用`async-poe-Client`库的指南。在开始之前，请确保你已经安装了这个库。
+[中文版本](README_zh_CN.md)
+
+This is a guide on how to use the `async-poe-Client` library. Before starting, make sure you've installed this library.
+
 ```
 pip install async-poe-client
 ```
 
-## 目录
+## Contents
+
 - [QA](#qa)
-- [步骤1: 导入库并创建Poe_Client对象](#步骤1导入库并创建poeclient对象)
-- [步骤2: 使用Poe_Client](#步骤2使用poeclient)
-    - [1. 获取账号的订阅信息](#1获取账号的订阅信息)
-    - [2. 获取账号上所有的可以使用的bot的信息](#2获取账号上所有的可以使用的bot的信息)
-    - [3. 创建一个bot](#3创建一个bot)
-    - [4. 修改一个bot的设置](#4修改一个bot的设置)
-    - [5. 删除一个bot](#5删除一个bot)
-    - [6. 和bot对话](#6和bot对话)
-        - [(1). 使用websockets和httpx的支持流式输出和建议回复的函数](#1使用websockets和httpx的支持流式输出和建议回复的函数)
-        - [(2). 仅使用httpx的不支持建议回复和流式输出的函数](#2仅使用httpx的不支持建议回复和流式输出的函数)
-    - [7. 删除bot的对话记忆,重置对话(这并不会删除聊天记录中的消息)](#7删除bot的对话记忆重置对话这并不会删除聊天记录中的消息)
-    - [8. 查询自己的可用的bot](#8查询自己的可用的bot)
-    - [9. 批量删除自己可用的bot](#9批量删除自己可用的bot)
-    - [10. 获取bot的部分数据或设置信息](#10获取bot的部分数据或设置信息)
-    - [11. 获取聊天记录(聊天消息)](#11获取聊天记录聊天消息)
-    - [12. 删除聊天记录(聊天消息)](#12删除聊天记录聊天消息)
-        - [(1). 删除和某个bot的聊天记录](#1-删除和某个bot的聊天记录)
-        - [(2). 删除和所有bot的所有聊天记录](#2-删除和所有bot的所有聊天记录)
-    - [13. 获取其他人创建的bot(poe.com左上角explor中的bot)](#13获取其他人创建的botpoecom左上角explor中的bot)
+- [Step 1: Import the library and create a Poe_Client object](#step-1-import-the-library-and-create-a-poeclient-object)
+- [Step 2: Use Poe_Client](#step-2-use-poeclient)
+    - [1. Get Account Subscription Information](#1-get-the-subscription-information-of-the-account)
+    - [2. Create a Bot](#2-create-a-bot)
+    - [3. Edit a Bot’s Settings](#3-edit-a-bots-settings)
+    - [4. Delete a Bot](#4-delete-a-bot)
+    - [5. Chat with a Bot](#5-chat-with-a-bot)
+        - [(1). Use websockets and httpx supported functions for streaming output and suggested replies](#1-using-websockets-and-httpx-support-for-streaming-output-and-suggested-replies)
+        - [(2). Use httpx only supported functions without suggested replies and streaming output](#2-function-that-only-uses-httpx-and-does-not-support-suggested-replies-and-streaming-output)
+    - [6. Delete a Bot's Dialogue Memory, Reset Conversation (This won't delete messages in chat history)](#6-deleting-a-bots-dialogue-memory-resetting-the-dialogue-this-does-not-delete-messages-in-the-chat-history)
+    - [7. Get your Available Bots](#7-get-your-own-available-bots)
+    - [8. Bulk Delete your Available Bots](#8-bulk-delete-your-available-bots)
+    - [9. Get partial data or full settings of a bot](#9-get-partial-data-or-full-settings-of-a-bot)
+    - [10. Get Chat History (Chat Messages)](#10-get-chat-history-chat-messages)
+    - [11. Delete Chat History (Chat Messages)](#11-delete-chat-history-chat-messages)
+        - [(1). Delete Chat History with a Certain Bot](#1-delete-chat-history-with-a-certain-bot)
+        - [(2). Delete All Chat History with All Bots](#2-delete-all-chat-history-with-all-bots)
+    - [12. Get Bots Created by Others (Bots in [explore](https://poe.com/explore_bots?category=All) page)](#12-get-bots-created-by-others-bots-in-explore-page)
 
 # QA:
 
-- 一.url_botname是什么? -> 在使用poe的某个bot时,链接中的bot的名称("https://poe.com/ChatGPT" 中是 'ChatGPT').  
-  这个url_botname和其他name的关系可以理解为:  
-  1.对于系统的自带的bot,你在poe网页上看到的bot的名称和url_name永远相等(
-  但是都不等于handle)  
-  2.对于自己创建的bot,url_name =
-  handle,如果设置了display_name,那么在网页上看到的名字是display_name,如果没设置,看到的就是url_name(handle)  
-  但是有特殊的情况下handle并不遵循上面的规律,比如使用get_available_bots得到的所有bot的handle都永远等于url_botname
+- 1.What is url_botname? -> When using a certain bot on poe, it is the name of the bot in the link ("ChatGPT"
+  in "[https://poe.com/ChatGPT ↗](https://poe.com/ChatGPT)").
+  The relationship between this url_botname and other names can be understood as:
+    1. For the system's built-in bots, the name of the bot you see on the poe web page and the url_name are always
+       equal (but neither equals the handle).
+    2. For bots you create, url_name = handle. If display_name is set, the name you see on the web page is display_name;
+       if not set, you see url_name (handle).
+       However, there are special cases where the handle does not follow the above rules, such as the handle of all bots
+       obtained using get_available_bots always equals url_botname.
 
-## 步骤1：导入库并创建Poe_Client对象
+## Step 1: Import the library and create a Poe_Client object
 
-在使用`Poe_Client`库的任何功能之前，需要首先导入库并创建一个`Poe_Client`对象。需要传递`p_b token`给`Poe_Client`
-的构造函数，然后调用`create`方法来初始化它。下面是一个示例：
+Before you can use any functionality of the `Poe_Client` library, you first need to import the library and create
+a `Poe_Client` object. You need to pass the `p_b token` to the constructor of `Poe_Client`, and then call the `create`
+method to initialize it. Here is an example:
 
 ```python
 from async_poe_client import Poe_Client
@@ -48,122 +54,118 @@ from async_poe_client import Poe_Client
 poe_client = await Poe_Client("your p_b token").create()
 ```
 
-其中，`"your p_b token"`应该被替换为你的p_b token。
+Here, `"your p_b token"` should be replaced with your actual p_b token.
 
-## 步骤2：使用Poe_Client
+## Step 2: Use Poe_Client
 
-在创建了`Poe_Client`后，你就可以使用它进行非常多的操作.
+After creating the `Poe_Client`, you can use it to perform a lot of operations.
 
 ---
 
-### 1.获取账号的订阅信息
+### 1. Get the subscription information of the account
 
-直接获取属性值即可
+You can get this directly by accessing the property value
 
 ```python
 print(poe_client.subscription)
 ```
 
-返回的是一个dict格式的订阅信息
+This will return a dictionary formatted subscription information.
 
 ---
 
-### 2.获取账号上所有的可以使用的bot的信息
+### 2. Create a bot
 
-注意获取的顺序是从上到下,按照poe.com首页的顺序获取的,既能获取系统自带的bot,也可以获取自己创建的bot
+Function: create_bot()
 
-函数:get_available_bots()
+Parameters:
 
-参数:
+- `handle: str` - The name of the new bot, which must be a string. This name must be unique throughout poe.com, and it
+  should not be the same as any other person's name.
+- `prompt: str = ""` - The preset personality of the new bot. This is an optional string, with the default value being
+  an empty string.
+- `display_name: Optional[str] = `None`` - The display name of the new bot. This is an optional string, with a default
+  value of `None`. If not provided, it will display the handle.
+- `base_model: str = "chinchilla"` - The model used by the new bot. This is an optional string. The choices include: "
+  chinchilla" (ChatGPT) or "a2" (Claude). If subscribed, you can use "beaver" (ChatGPT4) or "a2_2" (Claude-2-100k).
+- `description: str = ""` - The description of the new bot. This is an optional string, with the default value being an
+  empty string.
+- `intro_message: str = ""` - The introductory information of the new bot. This is an optional string. If it is an empty
+  string, then the bot will not have any introductory information.
+- `prompt_public: bool = True` - Whether the preset personality should be publicly visible. This is an optional boolean,
+  with the default value being True.
+- `profile_picture_url: Optional[str] = `None`` - The URL of the bot's profile picture. This is an optional string, with
+  the default value being `None`. Using this library does not actually allow you to upload custom images.
+- `linkification: bool = False` - Whether the bot should convert some text in the response into clickable links. This is
+  an optional boolean, with the default value being False.
+- `markdown_rendering: bool = True` - Whether the bot's response should enable markdown rendering. This is an optional
+  boolean, with the default value being True.
+- `suggested_replies: bool = True` - Whether the bot should suggest possible replies after each response. This is an
+  optional boolean, with the default value being False.
+- `private: bool = False` - Whether the bot should be private. This is an optional boolean, with the default value being
+  False.
+- `temperature: Optional[float] = `None`` - The temperature of the new bot. This is an optional float, with the default
+  value being `None`.
 
-- ` count: Optional[int] = 2` - 要获取的bot的数量
-- `get_all: Optional[bool] = False` - 是否直接获取所有的自己的聊天消息
+If you want the new bot to use your own API (you can get the official poe tutorial for
+accessing [here ↗](https://github.com/poe-platform/api-bot-tutorial)), please use the following parameters:
 
-返回值: List[dict]  
-这里每个dict中的 handle 永远等于 在其他功能中可以使用的url_name
+- `api_bot = False` - Whether the bot is your own API bot.
+- `api_key = `None`` - The API key of the new bot.
+- `api_url = `None`` - The API URL of the new bot.
+  Return value: `None`
 
-获取指定数量的bot
-
-```python
-bots = await poe_client.get_available_bots(count=25)
-print(bots)
-```
-
-获取所有的bot
-
-```python
-bots = await poe_client.get_available_bots(get_all=True)
-print(bots)
-```
-
----
-
-### 3.创建一个bot
-
-函数:create_bot()
-
-参数:
-
-- `handle: str` - 新 bot 的名称，必须是字符串类型,而且这个名字在整个poe.com中都必须是唯一的,和别人的重名也不行。
-- `prompt: str = ""` - 新 bot 的预设人格，可选字符串类型，默认为空字符串。
-- `display_name: Optional[str] = `None`` - 新 bot 的显示名称，可选字符串类型，默认为`None`。如果不传递，将显示handle。
-- `base_model: str = "chinchilla"` - 新 bot 使用的模型，可选字符串类型。选项包括："chinchilla" (ChatGPT) 或 "a2" (Claude)
-  。如果已经订阅，可以使用 "beaver" (ChatGPT4) 或 "a2_2" (Claude-2-100k)。
-- `description: str = ""` - 新 bot 的描述，可选字符串类型，默认为空字符串。
-- `intro_message: str = ""` - 新 bot 的介绍信息，可选字符串类型。如果这是一个空字符串，则 bot 将没有介绍信息。
-- `prompt_public: bool = True` - 预设人格是否应公开可见，可选布尔类型，默认为True。
-- `profile_picture_url: Optional[str] = `None`` - bot 的个人资料图片的 URL，可选字符串类型，默认为`None`
-  。使用这个库实际上无法上传自定义图像。
-- `linkification: bool = False` - bot 是否应将响应中的某些文本转化为可点击的链接，可选布尔类型，默认为False。
-- `markdown_rendering: bool = True` - bot 的响应是否启用 markdown 渲染，可选布尔类型，默认为True。
-- `suggested_replies: bool = False` - bot 是否应在每次响应后建议可能的回复，可选布尔类型，默认为False。
-- `private: bool = False` - bot 是否应为私人的，可选布尔类型，默认为False。
-- `temperature: Optional[float] = `None`` - 新 bot 的温度，可选浮点数类型，默认为`None`。
-
-如果你希望新的 bot 使用你自己的 API（在[这里](https://github.com/poe-platform/api-bot-tutorial)可以获取poe官方的接入教程），请使用以下参数：
-
-- `api_bot = False` - bot 是否是 自己的API bot。
-- `api_key = `None`` - 新 bot 的 API 密钥。
-- `api_url = `None`` - 新 bot 的 API URL。
-  返回值:`None`
-
-最简单的用例如下,只需要传递hanlde和prompt就可以创建一个bot
+The simplest usage is shown below. You only need to pass the handle and prompt to create a bot.
 
 ```python
-await poe_client.create_bot(handle="testbotcx1", prompt="a ai assistant", p)
+await poe_client.create_bot(handle="testbotcx1", prompt="a ai assistant")
 ```
 
 ---
 
-### 4.修改一个bot的设置
+### 3. Edit a Bot’s Settings
 
-函数:edit_bot()
+Function: `edit_bot()`
 
-参数:  
-注意下面只有url_botname是bot原来的名字,其他的都是要修改成的参数,如果不传递,则这个参数会保持不变
+Parameters:
 
-- `url_botname: str` - 所要修改的bot的url_name，必须是字符串类型。
-- `handle: Optional[str]` - bot 的名称，必须是字符串类型，且在整个poe.com中必须是唯一的，不能与其他bot重名。
-- `prompt: Optional[str] = ""` - bot 的预设人格，可选字符串类型，默认为空字符串。
-- `display_name: Optional[str] = `None`` - bot 的显示名称，可选字符串类型，默认为`None`。如果不传递，将显示handle。
-- `base_model: Optional[str] = "chinchilla"` - bot 使用的模型，可选字符串类型。选项包括："chinchilla" (ChatGPT) 或 "a2" (
-  Claude)。如果已经订阅，可以使用 "beaver" (ChatGPT4) 或 "a2_2" (Claude-2-100k)。
-- `description: Optional[str] = ""` - bot 的描述，可选字符串类型，默认为空字符串。
-- `intro_message: Optional[str] = ""` - bot 的介绍信息，可选字符串类型。如果这是一个空字符串，则 bot 将没有介绍信息。
-- `prompt_public: Optional[bool] = True` - 预设人格是否应公开可见，可选布尔类型，默认为True。
-- `profile_picture_url: Optional[str] = `None`` - bot 的个人资料图片的 URL，可选字符串类型，默认为`None`
-  。使用这个库实际上无法上传自定义图像。
-- `linkification: Optional[bool] = False` - bot 是否应将响应中的某些文本转化为可点击的链接，可选布尔类型，默认为False。
-- `markdown_rendering: Optional[bool] = True` - bot 的响应是否启用 markdown 渲染，可选布尔类型，默认为True。
-- `suggested_replies: Optional[bool] = False` - bot 是否应在每次响应后建议可能的回复，可选布尔类型，默认为False。
-- `private: Optional[bool] = False` - bot 是否应为私人的，可选布尔类型，默认为False。
-- `temperature: Optional[float] = `None`` - bot 的温度，可选浮点数类型，默认为`None`。
+Note that only `url_botname` is the original name of the bot, the rest are parameters to be modified. If not passed, the
+parameter will remain unchanged.
 
-如果你希望新的 bot 使用你自己的 API（在[这里](https://github.com/poe-platform/api-bot-tutorial)可以获取poe官方的接入教程），请使用以下参数：
+- `url_botname: str` - The url_name of the bot to be modified. This must be a string.
+- `handle: Optional[str]` - The name of the bot. This must be a string and must be unique across poe.com, i.e., it
+  should not be the same as other bots.
+- `prompt: Optional[str] = ""` - The preset personality of the bot. This is an optional string, defaulting to an empty
+  string.
+- `display_name: Optional[str] = None` - The display name of the bot. This is an optional string, defaulting to `None`.
+  If not passed, the handle will be displayed.
+- `base_model: Optional[str] = "chinchilla"` - The model used by the bot. This is an optional string. Options include: "
+  chinchilla" (ChatGPT) or "a2" (Claude). If subscribed, you can use "beaver" (ChatGPT4) or "a2_2" (Claude-2-100k).
+- `description: Optional[str] = ""` - The description of the bot. This is an optional string, defaulting to an empty
+  string.
+- `intro_message: Optional[str] = ""` - The introduction message of the bot. This is an optional string. If this is an
+  empty string, then the bot will not have an introduction message.
+- `prompt_public: Optional[bool] = True` - Whether the preset personality should be publicly visible. This is an
+  optional boolean, defaulting to True.
+- `profile_picture_url: Optional[str] = None` - The URL of the bot's profile picture. This is an optional string,
+  defaulting to `None`. Using this library, you cannot actually upload custom images.
+- `linkification: Optional[bool] = False` - Whether the bot should convert some text in responses into clickable links.
+  This is an optional boolean, defaulting to False.
+- `markdown_rendering: Optional[bool] = True` - Whether the bot's responses enable markdown rendering. This is an
+  optional boolean, defaulting to True.
+- `suggested_replies: Optional[bool] = False` - Whether the bot should suggest possible replies after each response.
+  This is an optional boolean, defaulting to False.
+- `private: Optional[bool] = False` - Whether the bot should be private. This is an optional boolean, defaulting to
+  False.
+- `temperature: Optional[float] = None` - The temperature of the bot. This is an optional floating-point number,
+  defaulting to `None`.
 
-- `api_bot = False` - bot 是否是 自己的API bot。
-- `api_key = `None`` - 新 bot 的 API 密钥。
-- `api_url = `None`` - 新 bot 的 API URL。
+If you want the new bot to use your own API (the official Poe access tutorial can be
+found [here ↗](https://github.com/poe-platform/api-bot-tutorial)), please use the following parameters:
+
+- `api_bot = False` - Whether the bot is your own API bot.
+- `api_key = None` - The API key for the new bot.
+- `api_url = None` - The API URL for the new bot.
 
 ```python
 await poe_client.edit_bot(url_botname="test27gs", handle="test27gs2", prompt="a computer programmer")
@@ -171,17 +173,17 @@ await poe_client.edit_bot(url_botname="test27gs", handle="test27gs2", prompt="a 
 
 ---
 
-### 5.删除一个bot
+### 4. Delete a bot
 
-注意,这个操作是不可逆的!
+Note, this operation is irreversible!
 
-函数:delete_bot()
+Function: `delete_bot()`
 
-参数:
+Parameters:
 
-- `url_botname:str` - bot的url名
+- `url_botname: str` - The url_name of the bot.
 
-返回值:`None`
+Return value: `None`
 
 ```python
 await poe_client.delete_bot(url_botname="test27gs2")
@@ -189,37 +191,45 @@ await poe_client.delete_bot(url_botname="test27gs2")
 
 ---
 
-### 6.和bot对话
+### 5. Chat with a Bot
 
-#### (1).使用websockets和httpx的支持流式输出和建议回复的函数
+#### (1). Using websockets and httpx support for streaming output and suggested replies
 
-函数:ask_stream()
-参数:
+Function: `ask_stream()`
 
-- `url_botname:str` - bot的url名
-- `question:str` - 询问的内容
-- `suggest_able:Optional[bool]` - 是否显示建议回复(需要该bot支持建议回复才能一并输出出来)
-- `with_chatb_reak:Optional[bool]` - 是否在对话后清除bot的记忆(即保持单对话)
+Parameters:
 
-返回值:str的AsyncGenerator
+- `url_botname: str` - The url_name of the bot.
+- `question: str` - The content of the query.
+- `suggest_able: Optional[bool]` - Whether to display suggested responses (the bot must support suggested responses to
+  output them together).
+- `with_chat_break: Optional[bool]` - Whether to clear the bot's memory after the dialogue (i.e., maintain a single
+  dialogue).
+
+Return value: `AsyncGenerator` of `str`
 
 ```python
+# The usage of get_available_bots() can be seen in section 8.
 bots = await poe_client.get_available_bots(count=2)
-async for message in poe_client.ask_stream(url_botname=bots[0]['handle'], question="introduce websockets"):
+async for message in poe_client.ask_stream(url_botname=bots[1]['handle'], question="introduce websockets"):
     print(message, end="")
+# If suggested replies are used and a list of suggested replies is desired, you can extract from the bots property.
+# It records the latest suggested replies of a bot.
+print(poe_client.bots[bots[1]['handle']]['Suggestion'])
 ```
 
-#### (2).仅使用httpx的不支持建议回复和流式输出的函数
+#### (2). Function that only uses httpx and does not support suggested replies and streaming output
 
-函数:ask()
+Function: `ask()`
 
-参数:
+Parameters:
 
-- `url_botname:str` - bot的url名
-- `question:str` - 询问的内容
-- `with_chatb_reak:Optional[bool]` - 是否在对话后清除bot的记忆(即保持单对话)
+- `url_botname: str` - The url_name of the bot.
+- `question: str` - The content of the query.
+- `with_chat_break: Optional[bool]` - Whether to clear the bot's memory after the dialogue (i.e., maintain a single
+  dialogue).
 
-返回值:str
+Return value: `str`
 
 ```python
 answer = await poe_client.ask(url_botname="Assistant", question="Introduce openai")
@@ -228,15 +238,15 @@ print(answer)
 
 ---
 
-### 7.删除bot的对话记忆,重置对话(这并不会删除聊天记录中的消息)
+### 6. Deleting a bot's dialogue memory, resetting the dialogue (This does not delete messages in the chat history)
 
-函数:send_chat_break()
+Function: `send_chat_break()`
 
-参数:
+Parameters:
 
-- `url_botname:str` - 要清除记忆的bot的url_botname
+- `url_botname: str` - The url_name of the bot whose memory you want to clear.
 
-返回值:`None`
+Return value: `None`
 
 ```python
 await poe_client.send_chat_break(url_botname="Assistant")
@@ -244,17 +254,18 @@ await poe_client.send_chat_break(url_botname="Assistant")
 
 ---
 
-### 8.查询自己的可用的bot
+### 7. Get your own available bots
 
-注意查询的顺序是按照poe.com左侧边栏的顺序从上往下查询的  
-函数:get_available_bots()
+Note that the query order is from top to bottom according to the order of the left sidebar on poe.com.  
+Function: `get_available_bots()`
 
-参数:
+Parameters:
 
-- `count:Optional[str]=25` - 要获取的bot的数量
-- `get_all:Optional[bool]=False` - 是否直接获取所有的bot
+- `count: Optional[str] = 25` - The number of bots to get.
+- `get_all: Optional[bool] = False` - Whether to directly get all bots.
 
-返回值:`List[dict]` - 包含bot信息dict的list,这个list中的无论系统bot还是自己创建的bot,其handle都永远等于url_botname
+Return value: `List[dict]` - A list containing dictionaries of bot information. In this list, whether it's a system bot
+or a bot you created, their handle is always equal to url_botname.
 
 ```python
 poe_client = await Poe_Client("your p_b token").create()
@@ -266,19 +277,22 @@ print(bots)
 
 ---
 
-### 9.批量删除自己可用的bot
+### 8. Bulk Delete your Available Bots
 
-注意删除顺序是按照poe.com左侧边栏的顺序从上往下查询的,并且如果碰到系统自带的bot,会直接跳过,但是也计算在数量之中了
+Please note that the deletion order is from top to bottom according to the order of the left sidebar on poe.com, and if
+you encounter a system-supplied bot, it will be skipped directly but will also be counted in the quantity.
 
-注意: 这个操作是不可逆的!
-函数:delete_available_bots()
+Warning: This operation is irreversible!
+Function: `delete_available_bots()`
 
-参数:
+Parameters:
 
-- ` count: Optional[int] = 2` - 要删除的bot的数量(注意这并不能删除系统的bot,所以该数量和实际删除的数量并不相等)
-- `del_all: Optional[bool] = False` - 是否直接删除所有的bot(注意删除所有bot的时间可能很长,这取决于你的bot的数量)
+- `count: Optional[int] = 2` - The number of bots to be deleted (note this cannot delete system bots, so the actual
+  number deleted may not match this count).
+- `del_all: Optional[bool] = False` - Whether to directly delete all bots (note that deleting all bots may take a long
+  time, depending on the number of bots you have).
 
-返回值:`None`
+Return value: `None`
 
 ```python
 await poe_client.delete_available_bots(count=2)
@@ -287,30 +301,31 @@ await poe_client.delete_available_bots(del_all=True)
 
 ---
 
-### 10.获取bot的部分数据或设置信息
+### 9. Get partial data or full settings of a bot
 
-函数: get_botdata()
+Function: `get_botdata()`
 
-参数:
+Parameters:
 
-- `url_botname:str` - 要清除记忆的bot的url_botname
+- `url_botname: str` - The url_name of the bot whose memory you want to clear.
 
-返回值:  
-一个包含bot的部分聊天记录和部分信息的dict
+Return value:  
+A dictionary containing some of the bot's chat history and information.
 
 ```python
 data = await poe_client.get_botdata(url_botname="578feb1716fe43f")
 print(data)
 ```
 
-函数:get_bot_info()
+Function: `get_bot_info()`
 
-参数:
+Parameters:
 
-- `url_botname:str` - 要清除记忆的bot的url_botname
+- `url_botname: str` - The url_name of the bot whose memory you want to clear.
 
-返回值:  
-一个包含bot的所有的信息的dict,这些信息就是在创建bot或者编辑bot时的那些参数,比如prompt 人格预设
+Return value:  
+A dictionary containing all the information of the bot, such as the parameters when creating or editing the bot, for
+example, prompt and personality preset.
 
 ```python
 info = await poe_client.get_bot_info(url_botname="578feb1716fe43f")
@@ -319,19 +334,20 @@ print(info)
 
 ---
 
-### 11.获取聊天记录(聊天消息)
+### 10. Get Chat History (Chat Messages)
 
-注意获取的顺序是由最近到之前,但是输出时是先输出先前的,在输出现在的,也就是和你在网页上向上滑动的操作完全相同
+Please note that the retrieval order is from most recent to oldest, but the output is first the older ones, then the
+newer ones, which is exactly the same as your operation on the webpage by scrolling up.
 
-函数:get_message_history()
+Function: `get_message_history()`
 
-参数:
+Parameters:
 
-- `url_botname:str` - 要获取聊天消息的bot的url_botname
-- ` count: Optional[int] = 2` - 要或缺的消息的数量
-- `del_all: Optional[bool] = False` - 是否直接或取所有的和该bot的聊天消息
+- `url_botname: str` - The url_name of the bot for which you want to retrieve chat messages.
+- `count: Optional[int] = 2` - The number of messages to retrieve.
+- `get_all: Optional[bool] = False` - Whether to directly retrieve all chat messages with this bot.
 
-返回值:`List[dict]` - 包含聊天消息dict的列表
+Return value: `List[dict]` - A list containing dictionaries of chat messages.
 
 ```python
 messages = await poe_client.get_message_history(url_botname="GPT-4", count=20)
@@ -342,32 +358,32 @@ print(messages)
 
 ---
 
-### 12.删除聊天记录(聊天消息)
+### 11. Delete Chat History (Chat Messages)
 
-注意: 这个操作是不可逆的!
+Warning: This operation is irreversible!
 
-#### (1). 删除和某个bot的聊天记录
+#### (1). Delete Chat History with a Certain Bot
 
-函数:delete_bot_conversation
+Function: `delete_bot_conversation`
 
-参数:
+Parameters:
 
-- `url_botname:str` - 要删除聊天记录的bot的url_botname
-- ` count: Optional[int] = 2` - 要删除的消息的数量
-- `del_all: Optional[bool] = False` - 是否直接删除所有的和该bot的聊天消息
+- `url_botname: str` - The url_name of the bot for which you want to delete chat messages.
+- `count: Optional[int] = 2` - The number of messages to delete.
+- `del_all: Optional[bool] = False` - Whether to directly delete all chat messages with this bot.
 
-返回值:`None`
+Return value: `None`
 
 ```python
 await poe_client.delete_bot_conversation(url_botname="Assistant", count=2)
 await poe_client.delete_bot_conversation(url_botname="Assistant", del_all=True)
 ```
 
-#### (2). 删除和所有bot的所有聊天记录
+#### (2). Delete All Chat History with All Bots
 
-函数:delete_all_conversations()  
-无参数  
-返回值:`None`
+Function: `delete_all_conversations()`  
+No parameters  
+Return value: `None`
 
 ```python
 await poe_client.delete_all_conversations()
@@ -375,22 +391,23 @@ await poe_client.delete_all_conversations()
 
 ---
 
-### 13.获取其他人创建的bot(poe.com左上角explor中的bot)
+### 12. Get Bots Created by Others (Bots in [explore](https://poe.com/explore_bots?category=All) page)
 
-注意获取的顺序是从上到下,按照poe.com首页的顺序获取的,既能获取系统自带的bot,也可以获取自己创建的bot
+Please note that the retrieval order is from top to bottom, in accordance with the order on poe.com.
 
-函数:explore_bots()
+Function: `explore_bots()`
 
-参数:
+Parameters:
 
-- `count:Optional[str]=25` - 要获取的bot的数量
-- `get_all:Optional[bool]=False` - 是否直接获取所有的bot
+- `count: Optional[str] = 25` - The number of bots to retrieve.
+- `get_all: Optional[bool] = False` - Whether to directly retrieve all bots.
 
-返回值:`List[dict]` - 包含bot信息dict的list,这个list中的无论系统bot还是自己创建的bot,其handle都永远等于url_botname
+Return value: `List[dict]` - A list containing dictionaries of bot information. In this list, whether it's a system bot
+or a bot you created, their handle is always equal to url_botname.
 
 ```python
 bots = await poe_client.explore_bots(count=100)
 print(bots)
-bots = await poe_client.explore_bots(explore_all=True)
+bots = await poe_client.explore_bots(get_all=True)
 print(bots)
 ```

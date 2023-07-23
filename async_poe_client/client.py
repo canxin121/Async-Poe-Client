@@ -38,23 +38,24 @@ class Poe_Client:
         self.tchannel_data: dict = {}
         self.user_id: str = ""
         self.viewer: dict = {}
-        self.ws_domain = f"tch{random.randint(1, int(1e6))}"
+        self.ws_domain = f"tch{random.randint(1, int(1e6))}"[:8]
         self.client.headers = {
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
-            "Accept-Encoding": "gzip, deflate, br",
-            "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6",
-            "Cache-Control": "max-age=0",
-            "p-b": f"{self.p_b}",
-            "Sec-Ch-Ua": '"Microsoft Edge";v="117", "Not;A=Brand";v="8", "Chromium";v="117"',
-            "Sec-Ch-Ua-Mobile": "?0",
-            "Sec-Ch-Ua-Platform": '"Windows"',
-            "Sec-Fetch-Dest": "document",
-            "Sec-Fetch-Mode": "navigate",
-            "Sec-Fetch-Site": "same-origin",
-            "Sec-Fetch-User": "?1",
-            "Upgrade-Insecure-Requests": "1",
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36 Edg/117.0.0.0",
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6',
+            'Cache-Control': 'max-age=0',
+            "Cookie": f"p-b={self.p_b}; SL_G_WPT_TO=zh-CN; SL_GWPT_Show_Hide_tmp=1; SL_wptGlobTipTmp=1;",
+            'Sec-Ch-Ua': '"Microsoft Edge";v="117", "Not;A=Brand";v="8", "Chromium";v="117"',
+            'Sec-Ch-Ua-Mobile': '?0',
+            'Sec-Ch-Ua-Platform': '"Windows"',
+            'Sec-Fetch-Dest': 'document',
+            'Sec-Fetch-Mode': 'navigate',
+            'Sec-Fetch-Site': 'same-origin',
+            'Sec-Fetch-User': '?1',
+            'Upgrade-Insecure-Requests': '1',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36 Edg/117.0.0.0',
         }
+
         self.client.cookies = {"p-b": f"{self.p_b}"}
 
     async def get_basedata(self) -> None:
@@ -99,8 +100,8 @@ class Poe_Client:
         """extract formkey from response html"""
         # by @aditiaryan and @ading2210
         try:
-            script_regex = r"<script>if\(.+\)throw new Error;(.+)</script>"
-            script_text = re.search(script_regex, response.text).group(1)
+            script_regex = r"<script>var.*?;</script>"
+            script_text = re.findall(script_regex, response.text)[0]
             key_regex = r'var [a-zA-Z]+="(.*?)",[a-zA-Z]=Array'
             key = re.search(key_regex, script_text).group(1)
             cipher_regex = r".\[(\d+)\]=.\[(\d+)\]"
@@ -127,7 +128,7 @@ class Poe_Client:
             response = await self.client.get(SETTING_URL)
             json_data = response.json()
             self.tchannel_data = json_data["tchannelData"]
-            self.client.headers.update({"poe-tchannel": self.tchannel_data["channel"]})
+            self.client.headers.update({"Poe-Tchannel": self.tchannel_data["channel"]})
         except Exception as e:
             raise ValueError("Failed to extract tchannel from response.") from e
 
@@ -145,7 +146,7 @@ class Poe_Client:
             channel = self.tchannel_data
         query = f'?min_seq={channel["minSeq"]}&channel={channel["channel"]}&hash={channel["channelHash"]}'
         return (
-                f'ws://{self.ws_domain}.tch.{channel["baseHost"]}/up/{channel["boxName"]}/updates'
+                f'wss://{self.ws_domain}.tch.{channel["baseHost"]}/up/{channel["boxName"]}/updates'
                 + query
         )
 
@@ -266,7 +267,7 @@ class Poe_Client:
         """
 
         data = generate_data(query_name, variables)
-        base_string = data + self.formkey + "WpuLMiXEKKE98j56k"
+        base_string = data + self.formkey + "Jb1hi3fg1MxZpzYfy"
         query_headers = {
             **self.client.headers,
             "content-type": "application/json",
@@ -286,8 +287,8 @@ class Poe_Client:
                         GQL_URL, data=data, headers=query_headers
                     )
                 json_data = response.json()
-                if json_data["data"] is None:
-                    detail_error = Exception(json_data["errors"][0]["message"])
+                if "success" in json_data.keys() and not json_data["success"]:
+                    detail_error = Exception(json_data["message"])
                     raise detail_error
                 return json_data
             except Exception as e:
@@ -343,7 +344,7 @@ class Poe_Client:
             profile_picture_url: Optional[str] = None,
             linkification: Optional[bool] = False,
             markdown_rendering: Optional[bool] = True,
-            suggested_replies: Optional[bool] = False,
+            suggested_replies: Optional[bool] = True,
             private: Optional[bool] = False,
             temperature: Optional[int] = None,
     ) -> None:
@@ -521,9 +522,9 @@ class Poe_Client:
             raise ValueError(
                 f"Failed to delete bot {url_botname}. Make sure the bot exists!"
             )
-        if not response["data"]["poeBotDelete"]["status"] == "success":
+        if response["data"] is None and response["errors"]:
             raise ValueError(
-                f"Failed to delete bot {url_botname} :{response['data']['poeBotDelete']['status']}"  # noqa: E501
+                f"Failed to delete bot {url_botname} :{response['errors'][0]['message']}"  # noqa: E501
             )
         logger.info(f"Succeed to delete bot {url_botname}")
 
@@ -758,18 +759,22 @@ class Poe_Client:
             This function opens a websocket connection to the bot, sends the question, and then listens for responses. It should be used within an 'async for' loop.
 
         """
-        ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36 Edg/117.0.0.0"
+        ua = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36 Edg/117.0.0.0'
         async with connect(
                 self.get_websocket_url(),
                 user_agent_header=ua,
                 close_timeout=0,
                 ping_timeout=3,
+                open_timeout=3,
+                timeout=3
         ) as ws:  # noqa: E501
             human_message_id = await self.send_message(
                 url_botname, question, with_chat_break
             )
             last_text = ""
             message = None
+            yield_header = False
+            suggestion_list = []
             while True:
                 try:
                     raw_data = await ws.recv()
@@ -787,9 +792,15 @@ class Poe_Client:
                         ):
                             suggestion_num = len(message["suggestedReplies"])
                             if 0 < suggestion_num < 3:
-                                yield f"\nsuggest repely{str(suggestion_num)}:{message['suggestedReplies'][-1]}"
-                            if suggestion_num >= 3:
-                                yield f"\nsuggest repely{str(suggestion_num)}:{message['suggestedReplies'][-1]}"
+                                if not yield_header:
+                                    yield_header = True
+                                    yield "\n\nSuggested Reply:"
+                                suggestion_list.append(message['suggestedReplies'][-1])
+                                yield f"\n{str(suggestion_num)}:{message['suggestedReplies'][-1]}"
+                            elif suggestion_num >= 3:
+                                suggestion_list.append(message['suggestedReplies'][-1])
+                                self.bots[url_botname]["Suggestion"] = suggestion_list
+                                yield f"\n{str(suggestion_num)}:{message['suggestedReplies'][-1]}"
                                 break
                             else:
                                 yield plain_text
@@ -1025,7 +1036,10 @@ class Poe_Client:
         bots = await self.get_available_bots(count, del_all)
         for bot in bots:
             if not bot["isSystemBot"]:
-                await self.delete_bot(bot["handle"])
+                try:
+                    await self.delete_bot(bot["handle"])
+                except Exception as e:
+                    logger.error(f"Failed to delete {bot['handle']} : {str(e)}. Make sure the bot belong to you.")
             else:
                 logger.info("Can't delete SystemBot, skipped")
         logger.info("Succeed to delete bots")

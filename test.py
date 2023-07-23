@@ -31,8 +31,8 @@ async def test_get_available_bots():
 @pytest.mark.asyncio
 async def test_stream_ask():
     poe_client = await Poe_Client("your p_b token").create()
-    bots = await poe_client.get_available_bots(count=2)
-    async for message in poe_client.ask_stream(url_botname=bots[0]['handle'], question="introduce websockets",
+    # bots = await poe_client.get_available_bots(count=2)
+    async for message in poe_client.ask_stream(url_botname="ChatGPT", question="hello",
                                                suggest_able=True):
         print(message, end="")
 
@@ -40,7 +40,7 @@ async def test_stream_ask():
 @pytest.mark.asyncio
 async def test_httponly_ask():
     poe_client = await Poe_Client("your p_b token").create()
-    answer = await poe_client.ask(url_botname="Assistant", question="Introduce openai")
+    answer = await poe_client.ask(url_botname="Assistant", question="hello")
     print(answer)
 
 
@@ -54,27 +54,26 @@ async def test_chatbreak():
 async def test_bot_operations():
     poe_client = await Poe_Client("your p_b token").create()
     # the handle when creating becomes the url_botname that to be used
-    await poe_client.create_bot(handle="test27gss", prompt="a ai assistant")
+    await poe_client.create_bot(handle="canxin1saw", prompt="a ai assistant")
     # change "test27gs" to test27gs2, and prompt changed too, but other config keep unchanged
-    await poe_client.edit_bot(url_botname="test27gss", handle="test27gs2s", prompt="a computer programmer")
+    await poe_client.edit_bot(url_botname="canxin1saw", handle="canxin1saws", prompt="a computer programmer")
     # delete the bot by the new_name
-    await poe_client.delete_bot(url_botname="test27gs2s")
+    await poe_client.delete_bot(url_botname="canxin1saws")
 
 
 @pytest.mark.asyncio
 async def test_delete_available_bots():
     """caution, this will permanently delete your bots"""
     poe_client = await Poe_Client("your p_b token").create()
-    await poe_client.delete_available_bots(count=2)
     await poe_client.delete_available_bots(del_all=True)
 
 
 @pytest.mark.asyncio
 async def test_get_bot_data_and_info():
     poe_client = await Poe_Client("your p_b token").create()
-    data = await poe_client.get_botdata(url_botname="test27gs2s")
+    data = await poe_client.get_botdata(url_botname="BotD8J642Y3OJ")
     print(data)
-    config = await poe_client.get_bot_info(url_botname="test27gs2s")
+    config = await poe_client.get_bot_info(url_botname="BotD8J642Y3OJ")
     print(config)
 
 
@@ -95,7 +94,7 @@ async def test_del_all_conversation():
 @pytest.mark.asyncio
 async def test_history_messages():
     poe_client = await Poe_Client("your p_b token").create()
-    messages = await poe_client.get_message_history(url_botname="GPT-4", count=20)
+    messages = await poe_client.get_message_history(url_botname="BotD8J642Y3OJ", count=20)
     print(messages)
-    messages = await poe_client.get_message_history(url_botname="GPT-4", get_all=True)
+    messages = await poe_client.get_message_history(url_botname="BotD8J642Y3OJ", get_all=True)
     print(messages)
