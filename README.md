@@ -32,8 +32,8 @@ pip install async-poe-client
 # QA:
 
 - 1.What is url_botname? -> When using a certain bot on poe, it is the name of the bot in the link ("ChatGPT"
-  in "[https://poe.com/ChatGPT ↗](https://poe.com/ChatGPT)").
-  The relationship between this url_botname and other names can be understood as:
+  in "[https://poe.com/ChatGPT ↗](https://poe.com/ChatGPT)").  
+  The relationship between this url_botname and other names can be understood as:  
     1. For the system's built-in bots, the name of the bot you see on the poe web page and the url_name are always
        equal (but neither equals the handle).
     2. For bots you create, url_name = handle. If display_name is set, the name you see on the web page is display_name;
