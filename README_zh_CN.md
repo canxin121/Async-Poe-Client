@@ -30,10 +30,10 @@ pip install async-poe-client
 
 - 一.url_botname是什么? -> 在使用poe的某个bot时,链接中的bot的名称("https://poe.com/ChatGPT" 中是 'ChatGPT').  
   这个url_botname和其他name的关系可以理解为:  
-  1.对于系统的自带的bot,你在poe网页上看到的bot的名称和url_name永远相等(
+  1.对于系统的自带的bot,你在poe网页上看到的bot的名称和url_botname永远相等(
   但是都不等于handle)  
-  2.对于自己创建的bot,url_name =
-  handle,如果设置了display_name,那么在网页上看到的名字是display_name,如果没设置,看到的就是url_name(handle)  
+  2.对于自己创建的bot,url_botname =
+  handle,如果设置了display_name,那么在网页上看到的名字是display_name,如果没设置,看到的就是url_botname(handle)  
   但是有特殊的情况下handle并不遵循上面的规律,比如使用get_available_bots得到的所有bot的handle都永远等于url_botname
 
 ## 步骤1：导入库并创建Poe_Client对象
@@ -111,7 +111,7 @@ await poe_client.create_bot(handle="testbotcx1", prompt="a ai assistant", p)
 参数:  
 注意下面只有url_botname是bot原来的名字,其他的都是要修改成的参数,如果不传递,则这个参数会保持不变
 
-- `url_botname: str` - 所要修改的bot的url_name，必须是字符串类型。
+- `url_botname: str` - 所要修改的bot的url_botname，必须是字符串类型。
 - `handle: Optional[str]` - bot 的名称，必须是字符串类型，且在整个poe.com中必须是唯一的，不能与其他bot重名。
 - `prompt: Optional[str] = ""` - bot 的预设人格，可选字符串类型，默认为空字符串。
 - `display_name: Optional[str] = `None`` - bot 的显示名称，可选字符串类型，默认为`None`。如果不传递，将显示handle。
@@ -376,7 +376,7 @@ Function: `get_message_history()`
 
 Parameters:
 
-- `url_botname: str` - The url_name of the bot for which you want to retrieve chat messages.
+- `url_botname: str` - The url_botname of the bot for which you want to retrieve chat messages.
 - `count: Optional[int] = 2` - The number of messages to retrieve.
 - `get_all: Optional[bool] = False` - Whether to directly retrieve all chat messages with this bot.
 
@@ -401,7 +401,7 @@ Function: `delete_bot_conversation`
 
 Parameters:
 
-- `url_botname: str` - The url_name of the bot for which you want to delete chat messages.
+- `url_botname: str` - The url_botname of the bot for which you want to delete chat messages.
 - `count: Optional[int] = 2` - The number of messages to delete.
 - `del_all: Optional[bool] = False` - Whether to directly delete all chat messages with this bot.
 

@@ -34,10 +34,10 @@ pip install async-poe-client
 - 1.What is url_botname? -> When using a certain bot on poe, it is the name of the bot in the link ("ChatGPT"
   in "[https://poe.com/ChatGPT ↗](https://poe.com/ChatGPT)").  
   The relationship between this url_botname and other names can be understood as:  
-    1. For the system's built-in bots, the name of the bot you see on the poe web page and the url_name are always
+    1. For the system's built-in bots, the name of the bot you see on the poe web page and the url_botname are always
        equal (but neither equals the handle).
-    2. For bots you create, url_name = handle. If display_name is set, the name you see on the web page is display_name;
-       if not set, you see url_name (handle).
+    2. For bots you create, url_botname = handle. If display_name is set, the name you see on the web page is display_name;
+       if not set, you see url_botname (handle).
        However, there are special cases where the handle does not follow the above rules, such as the handle of all bots
        obtained using get_available_bots always equals url_botname.
 
@@ -131,7 +131,7 @@ Parameters:
 Note that only `url_botname` is the original name of the bot, the rest are parameters to be modified. If not passed, the
 parameter will remain unchanged.
 
-- `url_botname: str` - The url_name of the bot to be modified. This must be a string.
+- `url_botname: str` - The url_botname of the bot to be modified. This must be a string.
 - `handle: Optional[str]` - The name of the bot. This must be a string and must be unique across poe.com, i.e., it
   should not be the same as other bots.
 - `prompt: Optional[str] = ""` - The preset personality of the bot. This is an optional string, defaulting to an empty
@@ -180,7 +180,7 @@ Function: `delete_bot()`
 
 Parameters:
 
-- `url_botname: str` - The url_name of the bot.
+- `url_botname: str` - The url_botname of the bot.
 
 Return value: `None`
 
@@ -198,7 +198,7 @@ Function: `ask_stream()`
 
 Parameters:
 
-- `url_botname: str` - The url_name of the bot.
+- `url_botname: str` - The url_botname of the bot.
 - `question: str` - The content of the query.
 - `suggest_able: Optional[bool]` - Whether to display suggested responses (the bot must support suggested responses to
   output them together).
@@ -223,7 +223,7 @@ Function: `ask()`
 
 Parameters:
 
-- `url_botname: str` - The url_name of the bot.
+- `url_botname: str` - The url_botname of the bot.
 - `question: str` - The content of the query.
 - `with_chat_break: Optional[bool]` - Whether to clear the bot's memory after the dialogue (i.e., maintain a single
   dialogue).
@@ -243,7 +243,7 @@ Function: `send_chat_break()`
 
 Parameters:
 
-- `url_botname: str` - The url_name of the bot whose memory you want to clear.
+- `url_botname: str` - The url_botname of the bot whose memory you want to clear.
 
 Return value: `None`
 
@@ -306,7 +306,7 @@ Function: `get_botdata()`
 
 Parameters:
 
-- `url_botname: str` - The url_name of the bot whose memory you want to clear.
+- `url_botname: str` - The url_botname of the bot whose memory you want to clear.
 
 Return value:  
 A dictionary containing some of the bot's chat history and information.
@@ -320,7 +320,7 @@ Function: `get_bot_info()`
 
 Parameters:
 
-- `url_botname: str` - The url_name of the bot whose memory you want to clear.
+- `url_botname: str` - The url_botname of the bot whose memory you want to clear.
 
 Return value:  
 A dictionary containing all the information of the bot, such as the parameters when creating or editing the bot, for
@@ -342,7 +342,7 @@ Function: `get_message_history()`
 
 Parameters:
 
-- `url_botname: str` - The url_name of the bot for which you want to retrieve chat messages.
+- `url_botname: str` - The url_botname of the bot for which you want to retrieve chat messages.
 - `count: Optional[int] = 2` - The number of messages to retrieve.
 - `get_all: Optional[bool] = False` - Whether to directly retrieve all chat messages with this bot.
 
@@ -367,7 +367,7 @@ Function: `delete_bot_conversation`
 
 Parameters:
 
-- `url_botname: str` - The url_name of the bot for which you want to delete chat messages.
+- `url_botname: str` - The url_botname of the bot for which you want to delete chat messages.
 - `count: Optional[int] = 2` - The number of messages to delete.
 - `del_all: Optional[bool] = False` - Whether to directly delete all chat messages with this bot.
 
