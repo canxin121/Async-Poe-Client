@@ -28,8 +28,7 @@ pip install async-poe-client
     - [11. Delete Chat History (Chat Messages)](#11-delete-chat-history-chat-messages)
         - [(1). Delete Chat History with a Certain Bot](#1-delete-chat-history-with-a-certain-bot)
         - [(2). Delete All Chat History with All Bots](#2-delete-all-chat-history-with-all-bots)
-    - [12. Get Bots Created by Others (Bots in [explore](https://poe.com/explore_bots?category=All) page)](#12-get-bots-created-by-others-bots-in-explore-page)
-
+    - [12. Get Bots Created by Others (Bots in Explore Page)](#12-get-bots-created-by-others-bots-in-explore-page)
 # QA:
 
 - 1.What is url_botname? -> When using a certain bot on poe, it is the name of the bot in the link ("ChatGPT"
