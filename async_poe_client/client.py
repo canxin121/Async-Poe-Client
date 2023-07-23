@@ -165,9 +165,24 @@ class Poe_Client:
         Note:
             This function should be called after creating a new Async_Poe_Client instance to ensure that all necessary data is fetched and set up.
         """
-
-        await self.get_basedata()
-        await self.get_channel_data()
+        retry = 3
+        while retry >= 0:
+            try:
+                await self.get_basedata()
+                break
+            except Exception as e:
+                retry -= 1
+                if retry == 0:
+                    raise e
+        retry = 3
+        while retry >= 0:
+            try:
+                await self.get_channel_data()
+                break
+            except Exception as e:
+                retry -= 1
+                if retry == 0:
+                    raise e
         await self.get_bots()
         logger.info("Succeed to create async_poe_client instance")
         return self
@@ -188,7 +203,7 @@ class Poe_Client:
         url = (
             f'https://poe.com/_next/data/{self.next_data["buildId"]}/{url_botname}.json'
         )
-        retry = 3
+        retry = 6
         error = Exception("Unknown error")
         while retry > 0:
             try:
