@@ -298,8 +298,8 @@ class Poe_Client:
                         )
                     data = await response.text()
                     json_data = json.loads(data)
-                    if "success" in json_data.keys() and not json_data["success"]:
-                        detail_error = Exception(json_data["message"])
+                    if "success" in json_data.keys() and not json_data["success"] or json_data["data"] is None:
+                        detail_error = Exception(json_data["errors"][0]["message"])
                         raise detail_error
                     return json_data
             except Exception as e:
