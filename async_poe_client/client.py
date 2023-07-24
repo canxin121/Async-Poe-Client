@@ -804,6 +804,8 @@ class Poe_Client:
                 while True:
                     try:
                         raw_data = await ws.receive_json()
+                        if "messages" not in raw_data:
+                            continue
                         message = json.loads(raw_data["messages"][-1])["payload"]["data"]["messageAdded"]  # noqa: E501
                         if message["messageId"] > human_message_id:
                             plain_text = message["text"][len(last_text):]
