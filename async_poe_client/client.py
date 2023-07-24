@@ -19,17 +19,17 @@ from .util import (
     CONST_NAMESPACE,
     generate_data,
     QUERIES,
-    generate_nonce, extract_formkey,
+    generate_nonce,
 )
 
 Websocket_Use_Count = 0
 
 
 class Poe_Client:
-    def __init__(self, p_b: str, proxy: str = ""):
+    def __init__(self, p_b: str, formkey: str, proxy: str = ""):
         self.bots: dict = {}
         self.bot_list_url: str = ""
-        self.formkey: str = ""
+        self.formkey: str = formkey
         self.home_bot_list: List[str] = []
         self.next_data: dict = {}
         self.p_b: str = p_b
@@ -46,6 +46,7 @@ class Poe_Client:
             'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6',
             'Cache-Control': 'max-age=0',
             "Cookie": f"p-b={self.p_b}; SL_G_WPT_TO=zh-CN; SL_GWPT_Show_Hide_tmp=1; SL_wptGlobTipTmp=1;",
+            "poe-formkey": self.formkey,
             'Sec-Ch-Ua': '"Microsoft Edge";v="117", "Not;A Brand";v="8", "Chromium";v="117"',
             'Sec-Ch-Ua-Mobile': '?0',
             'Sec-Ch-Ua-Platform': '"Windows"',
@@ -109,15 +110,15 @@ class Poe_Client:
                 "Failed to extract 'viewer' or 'user_id' from 'next_data'."
             ) from e
 
-        """extract formkey from response html"""
-        # by @aditiaryan and @ading2210
-        try:
-            self.formkey = extract_formkey(text)
-            self.headers["poe-formkey"] = self.formkey
-        except AttributeError as e:
-            raise ValueError(
-                "Failed to extract 'formkey' from the response text."
-            ) from e
+        # """extract formkey from response html"""
+        # # by @aditiaryan and @ading2210
+        # try:
+        #     self.formkey = extract_formkey(text)
+        #     self.headers["poe-formkey"] = self.formkey
+        # except Exception as e:
+        #     raise ValueError(
+        #         "Failed to extract 'formkey' from the response text."
+        #     ) from e
 
     async def get_channel_data(self) -> None:
         """
@@ -792,7 +793,7 @@ class Poe_Client:
                 global Websocket_Use_Count
                 if Websocket_Use_Count % 3 == 0:
                     await self.subscribe()
-                    Websocket_Use_Count += 1
+                Websocket_Use_Count += 1
                 human_message_id = await self.send_message(
                     url_botname, question, with_chat_break
                 )

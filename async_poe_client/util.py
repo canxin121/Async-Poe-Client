@@ -1,6 +1,5 @@
 import json
 import random
-import re
 import secrets
 import uuid
 from pathlib import Path
@@ -60,23 +59,3 @@ def load_queries():
 
 
 load_queries()
-
-
-def extract_formkey(html_text):
-    script_regex = r"<script>.*?;</script>"
-    script_text = re.findall(script_regex, html_text)[0]
-    pattern = r'<script>window.\w+=function\(\){return window.\w+\("(\w+)"\);};</script>'
-    match = re.search(pattern, html_text)
-    if match:
-        key = match.group(1)
-    else:
-        raise Exception("Failed to get key for decoding form key")
-    pattern = r'return q\(\w+,(\[.*?\])\)\['
-    match = re.search(pattern, script_text)
-    if match:
-        js_array_str = match.group(1)
-        js_array = re.findall(r'0x[\da-fA-F]+', js_array_str)  # match hexadecimal numbers
-        index_array = [int(num, 16) for num in js_array]  # convert to decimal
-    else:
-        raise Exception("Failed to decode js_array")
-    return ''.join([key[index] for index in index_array])[:32]

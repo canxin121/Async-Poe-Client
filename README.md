@@ -50,9 +50,9 @@ method to initialize it. Here is an example:
 ```python
 from async_poe_client import Poe_Client
 
-poe_client = await Poe_Client("your p_b token").create()
+poe_client = await Poe_Client("your p_b token", "your formkey").create()
 # or with a proxy
-poe_client = await Poe_Client("your p_b token",proxy="socks5://127.0.0.1:7890").create()
+poe_client = await Poe_Client("your p_b token", "your formkey", proxy="socks5://127.0.0.1:7890").create()
 ```
 
 Here, `"your p_b token"` should be replaced with your actual p_b token.
