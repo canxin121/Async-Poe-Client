@@ -1,5 +1,5 @@
 # 使用指南
-
+最新版本:0.1.9
 这是如何使用`async-poe-Client`库的指南。在开始之前，请确保你已经安装了这个库。
 ```
 pip install async-poe-client
