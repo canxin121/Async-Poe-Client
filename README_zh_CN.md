@@ -1,5 +1,5 @@
 # 使用指南
-
+最新版本:0.1.9
 这是如何使用`async-poe-Client`库的指南。在开始之前，请确保你已经安装了这个库。
 ```
 pip install async-poe-client
@@ -28,14 +28,16 @@ pip install async-poe-client
 
 # QA:
 
-- 一.url_botname是什么? -> 在使用poe的某个bot时,链接中的bot的名称("https://poe.com/ChatGPT" 中是 'ChatGPT').  
+- 一:url_botname是什么? -> 在使用poe的某个bot时,链接中的bot的名称("https://poe.com/ChatGPT" 中是 'ChatGPT').  
   这个url_botname和其他name的关系可以理解为:  
   1.对于系统的自带的bot,你在poe网页上看到的bot的名称和url_botname永远相等(
   但是都不等于handle)  
   2.对于自己创建的bot,url_botname =
   handle,如果设置了display_name,那么在网页上看到的名字是display_name,如果没设置,看到的就是url_botname(handle)  
   但是有特殊的情况下handle并不遵循上面的规律,比如使用get_available_bots得到的所有bot的handle都永远等于url_botname
-
+- 二:如何获得p_b和formkey? ->  
+  1.获取p_b: 打开poe.com,F12打开调试工具,然后选择到应用程序,在cookie里有p_b一项的值  
+  2.获取formkey: 打开poe.com,F12打开调试工具,然后选择到网络一项,和某个bot对话之后,可以看到gqlpost的网络请求,在其中的请求标头中后面还有单独的formkey的键值对  
 ## 步骤1：导入库并创建Poe_Client对象
 如果你不传入formkey,你需要安装node.js才能正常使用生成formkey的功能
 这里是下载链接.[node.js](https://nodejs.org/en)
