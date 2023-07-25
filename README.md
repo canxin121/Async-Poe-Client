@@ -18,8 +18,8 @@ pip install async-poe-client
     - [3. Edit a Bot’s Settings](#3-edit-a-bots-settings)
     - [4. Delete a Bot](#4-delete-a-bot)
     - [5. Chat with a Bot](#5-chat-with-a-bot)
-        - [(1). Use websockets and httpx supported functions for streaming output and suggested replies](#1-using-websockets-and-httpx-support-for-streaming-output-and-suggested-replies)
-        - [(2). Use httpx only supported functions without suggested replies and streaming output](#2-function-that-only-uses-httpx-and-does-not-support-suggested-replies-and-streaming-output)
+        - [(1). Use channel_url and aiohttp supported functions for streaming output and suggested replies](#1-using-channelurl-and-aiohttp-support-for-streaming-output-and-suggested-replies)
+        - [(2). Use data_url and aiohttp supported functions without suggested replies and streaming output](#2-using-dataurl-and-aiohttp-but-does-not-support-suggested-replies-and-streaming-output)
     - [6. Delete a Bot's Dialogue Memory, Reset Conversation (This won't delete messages in chat history)](#6-deleting-a-bots-dialogue-memory-resetting-the-dialogue-this-does-not-delete-messages-in-the-chat-history)
     - [7. Get your Available Bots](#7-get-your-own-available-bots)
     - [8. Bulk Delete your Available Bots](#8-bulk-delete-your-available-bots)
@@ -194,7 +194,7 @@ await poe_client.delete_bot(url_botname="test27gs2")
 
 ### 5. Chat with a Bot
 
-#### (1). Using websockets and httpx support for streaming output and suggested replies
+#### (1). Using channel_url and aiohttp support for streaming output and suggested replies
 
 Function: `ask_stream()`
 
@@ -212,14 +212,14 @@ Return value: `AsyncGenerator` of `str`
 ```python
 # The usage of get_available_bots() can be seen in section 8.
 bots = await poe_client.get_available_bots(count=2)
-async for message in poe_client.ask_stream(url_botname=bots[1]['handle'], question="introduce websockets"):
+async for message in poe_client.ask_stream(url_botname=bots[1]['handle'], question="introduce async and await"):
     print(message, end="")
 # If suggested replies are used and a list of suggested replies is desired, you can extract from the bots property.
 # It records the latest suggested replies of a bot.
 print(poe_client.bots[bots[1]['handle']]['Suggestion'])
 ```
 
-#### (2). Function that only uses httpx and does not support suggested replies and streaming output
+#### (2). Using data_url and aiohttp but does not support suggested replies and streaming output
 
 Function: `ask()`
 

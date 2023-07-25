@@ -701,7 +701,7 @@ class Poe_Client:
             ValueError: If there's a timeout or failure in receiving the message from the bot.
 
         Note:
-            This function uses HTTPX to send and receive messages. It doesn't support streaming and is not recommended if 'ask_stream' can be used.
+            This function uses AIOHTTP to send and receive messages. It doesn't support streaming and is not recommended if 'ask_stream' can be used.
 
         """
         await self.subscribe()

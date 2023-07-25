@@ -14,8 +14,8 @@ pip install async-poe-client
     - [3. 修改一个bot的设置](#3修改一个bot的设置)
     - [4. 删除一个bot](#4删除一个bot)
     - [5. 和bot对话](#5和bot对话)
-        - [(1). 使用websockets和httpx的支持流式输出和建议回复的函数](#1使用websockets和httpx的支持流式输出和建议回复的函数)
-        - [(2). 仅使用httpx的不支持建议回复和流式输出的函数](#2仅使用httpx的不支持建议回复和流式输出的函数)
+        - [(1). 使用channel_url和aiohttp的支持流式输出和建议回复的函数](#1使用channelurl和aiohttp的支持流式输出和建议回复的函数)
+        - [(2). 使用dataurl和aiohttp但不支持流式输出和建议回复的函数](#2使用dataurl和aiohttp但不支持流式输出和建议回复的函数)
     - [6. 删除bot的对话记忆,重置对话(这并不会删除聊天记录中的消息)](#6删除bot的对话记忆重置对话这并不会删除聊天记录中的消息)
     - [7. 查询自己的可用的bot](#7查询自己的可用的bot)
     - [8. 批量删除自己可用的bot](#8批量删除自己可用的bot)
@@ -160,7 +160,7 @@ await poe_client.delete_bot(url_botname="test27gs2")
 
 ### 5.和bot对话
 
-#### (1).使用websockets和httpx的支持流式输出和建议回复的函数
+#### (1).使用channel_url和aiohttp的支持流式输出和建议回复的函数
 
 函数:ask_stream()
 参数:
@@ -175,14 +175,14 @@ await poe_client.delete_bot(url_botname="test27gs2")
 ```python
 # 这里的get_available_bots()可以在第8条中看到使用说明
 bots = await poe_client.get_available_bots(count=2)
-async for message in poe_client.ask_stream(url_botname=bots[1]['handle'], question="introduce websockets"):
+async for message in poe_client.ask_stream(url_botname=bots[1]['handle'], question="introduce async and await"):
     print(message, end="")
 
 # 如果使用了建议回复,而且想要一个建议回复的列表,可以从bots属性中提取,它会记录某个bot的最后的建议回复
 print(poe_client.bots[bots[1]['handle']]['Suggestion'])
 ```
 
-#### (2).仅使用httpx的不支持建议回复和流式输出的函数
+#### (2).使用data_url和aiohttp但不支持流式输出和建议回复的函数
 
 函数:ask()
 
