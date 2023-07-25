@@ -43,16 +43,24 @@ pip install async-poe-client
 
 ## Step 1: Import the library and create a Poe_Client object
 
+If you don't formkey to the Poe_Client, you need to install node.js for generate form key.
+Here is the download link.[node.js](https://nodejs.org/en)
+
 Before you can use any functionality of the `Poe_Client` library, you first need to import the library and create
-a `Poe_Client` object. You need to pass the `p_b token` to the constructor of `Poe_Client`, and then call the `create`
+a `Poe_Client` object. You need to pass the `p_b token` and `formkey` to the constructor of `Poe_Client`, and then call the `create`
 method to initialize it. Here is an example:
 
 ```python
 from async_poe_client import Poe_Client
 
-poe_client = await Poe_Client("your p_b token", "your formkey").create()
+poe_client = await Poe_Client("your p_b token").create()
 # or with a proxy
-poe_client = await Poe_Client("your p_b token", "your formkey", proxy="socks5://127.0.0.1:7890").create()
+poe_client = await Poe_Client("your p_b token", proxy="socks5://127.0.0.1:7890").create()
+
+# if the formkey algorithm changes, please pass your formkey
+poe_client = await Poe_Client("your p_b token","your form key").create()
+# or with a proxy
+poe_client = await Poe_Client("your p_b token","your form key", proxy="socks5://127.0.0.1:7890").create()
 ```
 
 Here, `"your p_b token"` should be replaced with your actual p_b token.

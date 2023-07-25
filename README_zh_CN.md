@@ -37,14 +37,23 @@ pip install async-poe-client
   但是有特殊的情况下handle并不遵循上面的规律,比如使用get_available_bots得到的所有bot的handle都永远等于url_botname
 
 ## 步骤1：导入库并创建Poe_Client对象
+如果你不传入formkey,你需要安装node.js才能正常使用生成formkey的功能
+这里是下载链接.[node.js](https://nodejs.org/en)
 
-在使用`Poe_Client`库的任何功能之前，需要首先导入库并创建一个`Poe_Client`对象。需要传递`p_b token`给`Poe_Client`
+在使用`Poe_Client`库的任何功能之前，需要首先导入库并创建一个`Poe_Client`对象。需要传递`p_b token` 和 `formkey` 给`Poe_Client`
 的构造函数，然后调用`create`方法来初始化它。下面是一个示例：
 
 ```python
 from async_poe_client import Poe_Client
 
 poe_client = await Poe_Client("your p_b token").create()
+# 也可以设置代理
+poe_client = await Poe_Client("your p_b token", proxy="socks5://127.0.0.1:7890").create()
+
+# 如果formkey的算法又变了,请传入formkey
+poe_client = await Poe_Client("your p_b token","your form key").create()
+# or with a proxy
+poe_client = await Poe_Client("your p_b token","your form key", proxy="socks5://127.0.0.1:7890").create()
 ```
 
 其中，`"your p_b token"`应该被替换为你的p_b token。

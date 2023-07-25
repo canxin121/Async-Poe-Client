@@ -20,13 +20,14 @@ from .util import (
     generate_data,
     QUERIES,
     generate_nonce,
+    extract_formkey,
 )
-
-Last_Use_Time = time.time()
 
 
 class Poe_Client:
-    def __init__(self, p_b: str, formkey: str, proxy: str = ""):
+    def __init__(
+        self, p_b: str, formkey: Optional[str] = "", proxy: Optional[str] = ""
+    ):
         self.channel_url: str = ""
         self.bots: dict = {}
         self.bot_list_url: str = ""
@@ -42,21 +43,16 @@ class Poe_Client:
         self.ws_domain = f"tch{random.randint(1, int(1e6))}"[:8]
         self.proxy = proxy
         self.headers = {
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
+            "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
             "Accept-Encoding": "gzip, deflate, br",
-            "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6",
-            "Cache-Control": "max-age=0",
-            "Cookie": f"p-b={self.p_b}; SL_G_WPT_TO=zh-CN; SL_GWPT_Show_Hide_tmp=1; SL_wptGlobTipTmp=1;",
+            "Accept-Language": "en-US,en;q=0.9",
+            "Cookie": f"p-b={self.p_b}",
             "poe-formkey": self.formkey,
-            "Sec-Ch-Ua": '"Microsoft Edge";v="117", "Not;A Brand";v="8", "Chromium";v="117"',
+            "Sec-Ch-Ua": '"Not.A/Brand";v="8", "Chromium";v="112"',
             "Sec-Ch-Ua-Mobile": "?0",
-            "Sec-Ch-Ua-Platform": '"Windows"',
-            "Sec-Fetch-Dest": "document",
-            "Sec-Fetch-Mode": "navigate",
-            "Sec-Fetch-Site": "same-origin",
-            "Sec-Fetch-User": "?1",
+            "Sec-Ch-Ua-Platform": '"Linux"',
             "Upgrade-Insecure-Requests": "1",
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36 Edg/117.0.0.0",
         }
 
     @property
@@ -110,6 +106,15 @@ class Poe_Client:
             raise ValueError(
                 "Failed to extract 'viewer' or 'user_id' from 'next_data'."
             ) from e
+        if not self.formkey:
+            if not self.formkey:
+                script_url_regex = r'src="(https://psc2\.cf2\.poecdn\.net/[a-f0-9]{40}/_next/static/chunks/pages/_app-[a-f0-9]{16}\.js)"'
+                script_url = re.search(script_url_regex, text).group(1)
+                async with aiohttp.ClientSession(**self.session_args) as client:
+                    response = await client.get(script_url)
+                    script_text = await response.text()
+            self.formkey = extract_formkey(text, script_text)
+            self.headers["poe-formkey"] = self.formkey
 
     async def get_channel_data(self) -> None:
         """
@@ -149,17 +154,7 @@ class Poe_Client:
                 retry -= 1
                 if retry == 0:
                     raise e
-        retry = 3
-        while retry >= 0:
-            try:
-                await self.get_channel_data()
-                break
-            except Exception as e:
-                retry -= 1
-                if retry == 0:
-                    raise e
         await self.get_bots()
-        await self.subscribe()
         logger.info("Succeed to create async_poe_client instance")
         return self
 
@@ -765,6 +760,8 @@ class Poe_Client:
 
         """
         async with aiohttp.ClientSession(**self.session_args) as client:
+            await self.get_channel_data()
+            await self.subscribe()
             human_message_id = await self.send_message(
                 url_botname, question, with_chat_break
             )
@@ -800,6 +797,7 @@ class Poe_Client:
                         ):
                             if len(message["suggestedReplies"]) == 0:
                                 suggestion_lost -= 1
+                                await asyncio.sleep(1)
                                 if suggestion_lost <= 0:
                                     logger.error(
                                         "Failed to get suggestions:Poe didn't send suggestions"
@@ -810,6 +808,7 @@ class Poe_Client:
                                     suggestion_list
                                 ):
                                     suggestion_lost -= 1
+                                    await asyncio.sleep(1)
                                     if suggestion_lost <= 0:
                                         logger.error(
                                             "Failed to get suggestions:Poe didn't send enough suggestions"
