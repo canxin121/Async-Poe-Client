@@ -38,7 +38,7 @@ async def test_get_available_bots():
 
 @pytest.mark.asyncio
 async def test_stream_ask():
-    poe_client = await Poe_Client("your p_b", "your formkey").create()
+    poe_client = await Poe_Client("your p_b", "you formkey").create()
     async for message in poe_client.ask_stream(url_botname="ChatGPT", question="introduce openai",
                                                suggest_able=True):
         print(message, end="")
