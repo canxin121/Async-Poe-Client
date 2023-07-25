@@ -40,7 +40,7 @@ pip install async-poe-client
        if not set, you see url_botname (handle).
        However, there are special cases where the handle does not follow the above rules, such as the handle of all bots
        obtained using get_available_bots always equals url_botname.
-- 2.How to obtain p_b and formkey? ->
+- 2.How to obtain p_b and formkey? ->  
     1.To obtain p_b: Open poe.com, press F12 to open the debugging tool, then select the application. You can find the value of p_b in the cookies.  
     2.To obtain formkey: Open poe.com, press F12 to open the debugging tool, then select Network. After chatting with a bot, you can see the gqlpost network request. Within the request headers, there is a separate key-value pair for the formkey.
 
