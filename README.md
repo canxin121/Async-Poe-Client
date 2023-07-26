@@ -46,7 +46,7 @@ pip install async-poe-client
 
 ## Step 1: Import the library and create a Poe_Client object
 
-If you don't formkey to the Poe_Client, you need to install node.js for generate form key.
+If you don't pass formkey to the Poe_Client, you need to install node.js for generate form key.
 Here is the download link.[node.js](https://nodejs.org/en)
 
 Before you can use any functionality of the `Poe_Client` library, you first need to import the library and create
