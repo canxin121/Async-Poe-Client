@@ -784,6 +784,10 @@ class Poe_Client:
             retry = 10
             suggestion_lost = 10
             while retry >= 0:
+                if retry == 0:
+                    raise Exception(
+                        "Failed to get answer form poe too many times:No Reply!"
+                    )
                 try:
                     response = await client.get(self.channel_url)
                     raw_data = await response.json()
@@ -797,7 +801,7 @@ class Poe_Client:
                         continue
                     message = json.loads(raw_data["messages"][-1])["payload"]["data"][
                         "messageAdded"
-                    ]  # noqa: E501
+                    ]
                     if message["messageId"] > human_message_id:
                         plain_text = message["text"][len(last_text) :]
                         last_text = message["text"]
@@ -839,7 +843,13 @@ class Poe_Client:
                                         if suggest not in suggestion_list:
                                             yield f"\n{str(len(suggestion_list)+1)}:{suggest}"
                                             suggestion_list.append(suggest)
+                                        self.bots[url_botname][
+                                            "Suggestion"
+                                        ] = suggestion_list
                                     if len(suggestion_list) >= 3:
+                                        self.bots[url_botname][
+                                            "Suggestion"
+                                        ] = suggestion_list
                                         break
                             else:
                                 retry -= 1
