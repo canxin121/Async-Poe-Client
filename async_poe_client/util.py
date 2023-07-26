@@ -71,10 +71,10 @@ def extract_formkey(html, script):
 
     function_regex = r"(window\.[a-zA-Z0-9]{17})=function"
     function_text = re.search(function_regex, script_text).group(1)
-    exec = f"{function_text}()"
+    exec_script = f"{function_text}()"
 
     context = execjs.compile(script_text)
-    formkey = context.eval(exec)
+    formkey = context.eval(exec_script)
     return formkey
 
 

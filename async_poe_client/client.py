@@ -76,10 +76,11 @@ class Poe_Client:
         """
         try:
             async with aiohttp.ClientSession(**self.session_args) as client:
-                response = await client.get(HOME_URL)
+                response = await client.get(HOME_URL, timeout=8)
                 text = await response.text()
         except Exception as e:
             raise Exception("Failed to get basedata from home.") from e
+        """extract next_data from html"""
         try:
             """get next_data"""
             json_regex = (
@@ -174,12 +175,12 @@ class Poe_Client:
         url = (
             f'https://poe.com/_next/data/{self.next_data["buildId"]}/{url_botname}.json'
         )
-        retry = 6
+        retry = 3
         error = Exception("Unknown error")
         while retry > 0:
             try:
                 async with aiohttp.ClientSession(**self.session_args) as client:
-                    response = await client.get(url, timeout=3)
+                    response = await client.get(url, timeout=8)
                     data = await response.text()  # noqa: E501
                     json_data = json.loads(data)
                     chat_data = json_data["pageProps"]["data"]["chatOfBotHandle"]
@@ -762,21 +763,33 @@ class Poe_Client:
         async with aiohttp.ClientSession(**self.session_args) as client:
             await self.get_channel_data()
             await self.subscribe()
-            human_message_id = await self.send_message(
-                url_botname, question, with_chat_break
-            )
+            retry = 3
+            error = "Unknown error"
+            while retry >= 0:
+                if retry == 0:
+                    raise error
+                try:
+                    human_message_id = await self.send_message(
+                        url_botname, question, with_chat_break
+                    )
+                    break
+                except Exception as e:
+                    retry -= 1
+                    error = e
+                    pass
             last_text = ""
             yield_header = False
             suggestion_list = []
             self.bots[url_botname]["Suggestion"] = []
-            retry = 5
-            suggestion_lost = 5
+            retry = 10
+            suggestion_lost = 10
             while retry >= 0:
                 try:
                     response = await client.get(self.channel_url)
                     raw_data = await response.json()
                     if "messages" not in raw_data:
                         retry -= 1
+                        await asyncio.sleep(1)
                         if retry == 0:
                             raise Exception(
                                 "Failed to get answer form poe too many times:No Reply!"
@@ -793,55 +806,57 @@ class Poe_Client:
                                 "hasSuggestedReplies"
                             ]
                             and suggest_able
-                            and message["state"] == "complete"
                         ):
-                            if len(message["suggestedReplies"]) == 0:
-                                suggestion_lost -= 1
-                                await asyncio.sleep(1)
-                                if suggestion_lost <= 0:
-                                    logger.error(
-                                        "Failed to get suggestions:Poe didn't send suggestions"
-                                    )
-                                    break
-                            if 0 < len(message["suggestedReplies"]) < 3:
-                                if len(message["suggestedReplies"]) == len(
-                                    suggestion_list
-                                ):
+                            if plain_text:
+                                retry = 10
+                                yield plain_text
+                            elif message["state"] == "complete":
+                                if len(message["suggestedReplies"]) == 0:
                                     suggestion_lost -= 1
-                                    await asyncio.sleep(1)
+                                    await asyncio.sleep(0.5)
                                     if suggestion_lost <= 0:
                                         logger.error(
-                                            "Failed to get suggestions:Poe didn't send enough suggestions"
+                                            "Failed to get suggestions:Poe didn't send suggestions"
                                         )
                                         break
-                                if not yield_header:
-                                    yield_header = True
-                                    yield "\n\nSuggested Reply:"
-                                for suggest in message["suggestedReplies"]:
-                                    if suggest not in suggestion_list:
-                                        suggestion_list.append(
-                                            message["suggestedReplies"][-1]
-                                        )
-                                        yield f"\n{str(len(message['suggestedReplies']))}:{message['suggestedReplies'][-1]}"  # noqa: E501
-                            elif len(message["suggestedReplies"]) >= 3:
-                                suggestion_list.append(message["suggestedReplies"][-1])
-                                self.bots[url_botname]["Suggestion"] = suggestion_list
-                                yield f"\n{str(len(message['suggestedReplies']))}:{message['suggestedReplies'][-1]}"
-                                break
+                                else:
+                                    if len(message["suggestedReplies"]) == len(
+                                        suggestion_list
+                                    ):
+                                        suggestion_lost -= 1
+                                        await asyncio.sleep(0.5)
+                                        if suggestion_lost <= 0:
+                                            logger.error(
+                                                "Failed to get enough suggestions:Poe didn't send suggestions"
+                                            )
+                                            break
+                                    else:
+                                        suggestion_lost = 10
+                                    if not yield_header:
+                                        yield_header = True
+                                        yield "\n\nSuggested Reply:"
+                                    for suggest in message["suggestedReplies"]:
+                                        if suggest not in suggestion_list:
+                                            yield f"\n{str(len(suggestion_list)+1)}:{suggest}"
+                                            suggestion_list.append(suggest)
+                                    if len(suggestion_list) >= 3:
+                                        break
                             else:
-                                yield plain_text
+                                retry -= 1
+                                await asyncio.sleep(1)
+                                continue
                         else:
+                            if plain_text:
+                                yield plain_text
                             if message["state"] == "complete":
-                                yield plain_text
                                 break
-                            else:
-                                yield plain_text
                     else:
                         retry -= 1
+                        await asyncio.sleep(1)
                         if retry == 0:
                             if retry == 0:
                                 raise Exception(
-                                    "Failed to get answer form poe too many times."
+                                    "Failed to get answer form poe too many times: No reply!"
                                 )
                             continue
                 except asyncio.exceptions.TimeoutError as e:
