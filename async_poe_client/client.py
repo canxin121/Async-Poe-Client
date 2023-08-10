@@ -3,7 +3,6 @@ import hashlib
 import json
 import random
 import re
-import time
 import uuid
 from typing import List, Union, AsyncGenerator, Optional
 
@@ -26,7 +25,7 @@ from .util import (
 
 class Poe_Client:
     def __init__(
-        self, p_b: str, formkey: Optional[str] = "", proxy: Optional[str] = ""
+            self, p_b: str, formkey: str, proxy: Optional[str] = ""
     ):
         self.channel_url: str = ""
         self.bots: dict = {}
@@ -42,6 +41,7 @@ class Poe_Client:
         self.viewer: dict = {}
         self.ws_domain = f"tch{random.randint(1, int(1e6))}"[:8]
         self.proxy = proxy
+        self.salt = "4LxgHM6KpFqokX0Ox"
         self.headers = {
             "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36",
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
@@ -114,7 +114,7 @@ class Poe_Client:
                 async with aiohttp.ClientSession(**self.session_args) as client:
                     response = await client.get(script_url)
                     script_text = await response.text()
-            self.formkey = extract_formkey(text, script_text)
+            self.formkey, self.salt = extract_formkey(text, script_text)
             self.headers["poe-formkey"] = self.formkey
 
     async def get_channel_data(self) -> None:
@@ -265,7 +265,7 @@ class Poe_Client:
         """
 
         data = generate_data(query_name, variables)
-        base_string = data + self.formkey + "Jb1hi3fg1MxZpzYfy"
+        base_string = data + self.formkey + self.salt
         query_headers = {
             **self.headers,
             "content-type": "application/json",
@@ -288,9 +288,9 @@ class Poe_Client:
                     data = await response.text()
                     json_data = json.loads(data)
                     if (
-                        "success" in json_data.keys()
-                        and not json_data["success"]
-                        or json_data["data"] is None
+                            "success" in json_data.keys()
+                            and not json_data["success"]
+                            or json_data["data"] is None
                     ):
                         detail_error = Exception(json_data["errors"][0]["message"])
                         raise detail_error
@@ -313,21 +313,20 @@ class Poe_Client:
             Raises an Exception if it encounters a failure while sending the SubscriptionsMutation.
         """
         try:
-            await self.send_query(
-                "SubscriptionsMutation",
-                {
-                    "subscriptions": [
-                        {
-                            "subscriptionName": "messageAdded",
-                            "query": QUERIES["MessageAddedSubscription"],
-                        },
-                        {
-                            "subscriptionName": "viewerStateUpdated",
-                            "query": QUERIES["ViewerStateUpdatedSubscription"],
-                        },
-                    ]
-                },
-            )
+            await self.send_query("SubscriptionsMutation", {
+                "subscriptions": [
+                    {
+                        "subscriptionName": "messageAdded",
+                        "queryHash": QUERIES["MessageAdded"],
+                        "query": None
+                    },
+                    {
+                        "subscriptionName": "viewerStateUpdated",
+                        "queryHash": QUERIES["ViewerStateUpdated"],
+                        "query": None
+                    }
+                ]
+            })
             logger.info("Succeed to subscribe")
         except Exception as e:
             raise Exception(
@@ -335,23 +334,23 @@ class Poe_Client:
             ) from e
 
     async def create_bot(
-        self,
-        handle: str,
-        prompt: str,
-        display_name: Optional[str] = None,
-        base_model: str = "chinchilla",
-        description: Optional[str] = "",
-        intro_message: Optional[str] = "",
-        api_key: Optional[str] = None,
-        api_bot: Optional[bool] = False,
-        api_url: Optional[str] = None,
-        prompt_public: Optional[bool] = True,
-        profile_picture_url: Optional[str] = None,
-        linkification: Optional[bool] = False,
-        markdown_rendering: Optional[bool] = True,
-        suggested_replies: Optional[bool] = True,
-        private: Optional[bool] = False,
-        temperature: Optional[int] = None,
+            self,
+            handle: str,
+            prompt: str,
+            display_name: Optional[str] = None,
+            base_model: str = "chinchilla",
+            description: Optional[str] = "",
+            intro_message: Optional[str] = "",
+            api_key: Optional[str] = None,
+            api_bot: Optional[bool] = False,
+            api_url: Optional[str] = None,
+            prompt_public: Optional[bool] = True,
+            profile_picture_url: Optional[str] = None,
+            linkification: Optional[bool] = False,
+            markdown_rendering: Optional[bool] = True,
+            suggested_replies: Optional[bool] = True,
+            private: Optional[bool] = False,
+            temperature: Optional[int] = None,
     ) -> None:
         """
         This function is used to create a new bot with the specified configuration.
@@ -385,7 +384,7 @@ class Poe_Client:
             Please ensure that the `handle` is unique and does not conflict with the handles of existing bots.
         """
         result = await self.send_query(
-            "PoeBotCreateMutation",
+            "PoeBotCreate",
             {
                 "model": base_model,
                 "displayName": display_name,
@@ -416,23 +415,23 @@ class Poe_Client:
         return
 
     async def edit_bot(
-        self,
-        url_botname: str,
-        handle: str = None,
-        prompt: Optional[str] = None,
-        display_name=None,
-        base_model="chinchilla",
-        description="",
-        intro_message="",
-        api_key=None,
-        api_url=None,
-        is_private_bot=None,
-        prompt_public=None,
-        profile_picture_url=None,
-        linkification=None,
-        markdown_rendering=None,
-        suggested_replies=None,
-        temperature=None,
+            self,
+            url_botname: str,
+            handle: str = None,
+            prompt: Optional[str] = None,
+            display_name=None,
+            base_model="chinchilla",
+            description="",
+            intro_message="",
+            api_key=None,
+            api_url=None,
+            is_private_bot=None,
+            prompt_public=None,
+            profile_picture_url=None,
+            linkification=None,
+            markdown_rendering=None,
+            suggested_replies=None,
+            temperature=None,
     ) -> None:
         """
         This function is used to edit the configuration of an existing bot.
@@ -469,7 +468,7 @@ class Poe_Client:
         botinfo = botinfo["data"]["bot"]
 
         result = await self.send_query(
-            "PoeBotEditMutation",
+            "PoeBotEdit",
             {
                 "baseBot": base_model or botinfo["model"],
                 "botId": botinfo["botId"],
@@ -484,9 +483,9 @@ class Poe_Client:
                 "apiKey": api_key or botinfo["apiKey"],
                 "hasLinkification": linkification or botinfo["hasLinkification"],
                 "hasMarkdownRendering": markdown_rendering
-                or botinfo["hasMarkdownRendering"],
+                                        or botinfo["hasMarkdownRendering"],
                 "hasSuggestedReplies": suggested_replies
-                or botinfo["hasSuggestedReplies"],
+                                       or botinfo["hasSuggestedReplies"],
                 "isPrivateBot": is_private_bot or botinfo["isPrivateBot"],
                 "temperature": temperature or botinfo["temperature"],
             },
@@ -519,7 +518,7 @@ class Poe_Client:
         bot_id = self.bots[url_botname]["defaultBotObject"]["botId"]
         try:
             response = await self.send_query(
-                "BotDeletionButton_poeBotDelete_Mutation", {"botId": bot_id}
+                "PoeBotDelete", {"botId": bot_id}
             )
         except Exception:
             raise ValueError(
@@ -532,7 +531,7 @@ class Poe_Client:
         logger.info(f"Succeed to delete bot {url_botname}")
 
     async def explore_bots(
-        self, count: int = 50, explore_all: bool = False
+            self, count: int = 50, explore_all: bool = False
     ) -> List[dict]:
         """
         Asynchronously explore and fetch a specified number of third party bots.
@@ -582,7 +581,7 @@ class Poe_Client:
         return bots[:count]
 
     async def send_message(
-        self, url_botname: str, question: str, with_chat_break: bool = False
+            self, url_botname: str, question: str, with_chat_break: bool = False
     ) -> int:
         """
         Sends a message to a specified bot and retrieves the message ID of the sent message.
@@ -612,10 +611,16 @@ class Poe_Client:
                 "bot": handle,
                 "query": question,
                 "chatId": self.bots[url_botname]["chatId"],
-                "source": None,
+                "source": {
+                    "chatInputMetadata": {
+                        "useVoiceRecord": False
+                    },
+                    "sourceType": "chat_input"
+                },
                 "clientNonce": generate_nonce(),
                 "sdid": self.sdid,
                 "withChatBreak": with_chat_break,
+                "attachments": []
             },
         )
         if not message_data["data"]["messageEdgeCreate"]["message"]:
@@ -634,11 +639,11 @@ class Poe_Client:
             )
 
     async def send_recv(
-        self,
-        url_botname: str,
-        last_text: str,
-        bot_message_id: str,
-        human_message_id: int,
+            self,
+            url_botname: str,
+            last_text: str,
+            bot_message_id: str,
+            human_message_id: int,
     ) -> None:
         """
         A function to mimic the behavior of a human user interacting with a webpage.
@@ -676,73 +681,12 @@ class Poe_Client:
             },
         )
 
-    async def ask(
-        self,
-        url_botname: str,
-        question: str,
-        with_chat_break: bool = False,
-    ) -> str:
-        """
-        Sends a question to a specified bot and retrieves the bot's response via HTTP.
-
-        Parameters:
-            url_botname (str): The unique identifier of the bot to which the question is to be sent.
-            question (str): The question to be sent to the bot.
-            with_chat_break (bool, optional): If set to True, a chat break will be sent before the question, clearing the bot's conversation memory. Default is False.
-
-        Returns:
-            Union[str, dict]: The bot's response. This will be a string if 'plain' is True, else it will be a dictionary.
-
-        Raises:
-            ValueError: If there's a timeout or failure in receiving the message from the bot.
-
-        Note:
-            This function uses AIOHTTP to send and receive messages. It doesn't support streaming and is not recommended if 'ask_stream' can be used.
-
-        """
-        await self.subscribe()
-        human_message_id = await self.send_message(
-            url_botname, question, with_chat_break
-        )
-        retry = 3
-        start_time = time.time()
-        while retry > 0:
-            try:
-                await asyncio.sleep(0.5)
-                data = await self.get_botdata(url_botname)
-                messages = data["messagesConnection"]["edges"]
-                if messages[-1]["node"]["messageId"] <= human_message_id:
-                    retry -= 1
-                    continue
-                else:
-                    now_time = time.time()
-                    differ = now_time - start_time
-                    if messages[-1]["node"]["text"]:
-                        await self.send_recv(
-                            url_botname,
-                            messages[-1]["node"]["text"],
-                            messages[-1]["node"]["messageId"],
-                            human_message_id,
-                        )
-                        return messages[-1]["node"]["text"]
-                    else:
-                        if differ > 180:
-                            raise ValueError(
-                                f"Timed out while getting message from {url_botname}"
-                            )
-                        continue
-            except Exception as e:
-                logger.error(
-                    f"Failed to getting message from {url_botname}, error:{str(e)}"
-                )
-        raise ValueError(f"Failed to getting message from {url_botname} too many times")
-
     async def ask_stream(
-        self,
-        url_botname: str,
-        question: str,
-        with_chat_break: bool = False,
-        suggest_able: bool = True,
+            self,
+            url_botname: str,
+            question: str,
+            with_chat_break: bool = False,
+            suggest_able: bool = True,
     ) -> AsyncGenerator:
         """
         Asynchronously sends a question to a specified bot and yields the bot's responses as they arrive.
@@ -803,13 +747,13 @@ class Poe_Client:
                         "messageAdded"
                     ]
                     if message["messageId"] > human_message_id:
-                        plain_text = message["text"][len(last_text) :]
+                        plain_text = message["text"][len(last_text):]
                         last_text = message["text"]
                         if (
-                            self.bots[url_botname]["defaultBotObject"][
-                                "hasSuggestedReplies"
-                            ]
-                            and suggest_able
+                                self.bots[url_botname]["defaultBotObject"][
+                                    "hasSuggestedReplies"
+                                ]
+                                and suggest_able
                         ):
                             if plain_text:
                                 retry = 10
@@ -825,7 +769,7 @@ class Poe_Client:
                                         break
                                 else:
                                     if len(message["suggestedReplies"]) == len(
-                                        suggestion_list
+                                            suggestion_list
                                     ):
                                         suggestion_lost -= 1
                                         await asyncio.sleep(0.5)
@@ -841,7 +785,7 @@ class Poe_Client:
                                         yield "\n\nSuggested Reply:"
                                     for suggest in message["suggestedReplies"]:
                                         if suggest not in suggestion_list:
-                                            yield f"\n{str(len(suggestion_list)+1)}:{suggest}"
+                                            yield f"\n{str(len(suggestion_list) + 1)}:{suggest}"
                                             suggestion_list.append(suggest)
                                         self.bots[url_botname][
                                             "Suggestion"
@@ -899,7 +843,7 @@ class Poe_Client:
         if url_botname not in self.bots.keys():
             self.bots[url_botname] = await self.get_botdata(url_botname)
         await self.send_query(
-            "AddMessageBreakMutation", {"chatId": self.bots[url_botname]["chatId"]}
+            "AddMessageBreakEdgeMutation", {"chatId": self.bots[url_botname]["chatId"]}
         )
         logger.info(f"Succeed to chat break to {url_botname}")
         return
@@ -928,7 +872,7 @@ class Poe_Client:
         logger.info(f"Succeed to deleting messages: {message_ids}")
 
     async def get_message_history(
-        self, url_botname, count: Optional[int] = None, get_all: Optional[bool] = False
+            self, url_botname, count: Optional[int] = None, get_all: Optional[bool] = False
     ):
         """
         Asynchronously fetches the message history for a specified bot.
@@ -982,10 +926,10 @@ class Poe_Client:
             return messages
 
     async def delete_bot_conversation(
-        self,
-        url_botname: str,
-        count: Optional[int] = None,
-        del_all: Optional[bool] = False,
+            self,
+            url_botname: str,
+            count: Optional[int] = None,
+            del_all: Optional[bool] = False,
     ):
         """
         Deletes the conversation history with the specified bot.
@@ -1016,7 +960,7 @@ class Poe_Client:
         logger.info(f"Succeed to delete {arg} messages with {url_botname}")
 
     async def get_available_bots(
-        self, count: Optional[int] = 25, get_all: Optional[bool] = False
+            self, count: Optional[int] = 25, get_all: Optional[bool] = False
     ) -> List[dict]:  # noqa: E501
         """
         Get own available bots .
@@ -1035,7 +979,7 @@ class Poe_Client:
             raise TypeError(
                 "Please provide at least one of the following parameters: get_all=<bool>, count=<int>"
             )
-        response = await self.send_query("availableBotsListModalPaginationQuery", {})
+        response = await self.send_query("AvailableBotsListModalPaginationQuery", {})
         bots = [
             each["node"]
             for each in response["data"]["viewer"]["availableBotsConnection"]["edges"]
@@ -1048,7 +992,7 @@ class Poe_Client:
             return bots[:count]
         while len(bots) < count or get_all:
             response = await self.send_query(
-                "availableBotsListModalPaginationQuery", {"cursor": cursor}
+                "AvailableBotsSelectorModalPaginationQuery", {"cursor": cursor}
             )
             new_bots = [
                 each["node"]
@@ -1071,7 +1015,7 @@ class Poe_Client:
         return bots[:count]
 
     async def delete_available_bots(
-        self, count: Optional[int] = 2, del_all: Optional[bool] = False
+            self, count: Optional[int] = 2, del_all: Optional[bool] = False
     ):
         """
         Asynchronously deletes some or all user available bots.

@@ -1,4 +1,5 @@
 # User Guide
+
 latest version:0.1.9  
 [中文使用指南](README_zh_CN.md)
 
@@ -29,28 +30,36 @@ pip install async-poe-client
         - [(1). Delete Chat History with a Certain Bot](#1-delete-chat-history-with-a-certain-bot)
         - [(2). Delete All Chat History with All Bots](#2-delete-all-chat-history-with-all-bots)
     - [12. Get Bots Created by Others (Bots in Explore Page)](#12-get-bots-created-by-others-bots-in-explore-page)
+
 # QA:
 
 - 1.What is url_botname? -> When using a certain bot on poe, it is the name of the bot in the link ("ChatGPT"
   in "[https://poe.com/ChatGPT ↗](https://poe.com/ChatGPT)").  
-  The relationship between this url_botname and other names can be understood as:  
+  The relationship between this url_botname and other names can be understood as:
     1. For the system's built-in bots, the name of the bot you see on the poe web page and the url_botname are always
        equal (but neither equals the handle).
-    2. For bots you create, url_botname = handle. If display_name is set, the name you see on the web page is display_name;
+    2. For bots you create, url_botname = handle. If display_name is set, the name you see on the web page is
+       display_name;
        if not set, you see url_botname (handle).
        However, there are special cases where the handle does not follow the above rules, such as the handle of all bots
        obtained using get_available_bots always equals url_botname.
-- 2.How to obtain p_b and formkey? ->  
-    1. To obtain p_b: Open poe.com, press F12 to open the debugging tool, then select the application. You can find the value of p_b in the cookies.  
-    2. To obtain formkey: Open poe.com, press F12 to open the debugging tool, then select Network. After chatting with a bot, you can see the gqlpost network request. Within the request headers, there is a separate key-value pair for the formkey.
+- 2.How to obtain p_b and formkey? ->
+    1. To obtain p_b: Open poe.com, press F12 to open the debugging tool, then select the application. You can find the
+       value of p_b in the cookies.
+    2. To obtain formkey: Open poe.com, press F12 to open the debugging tool, then select Network. After chatting with a
+       bot, you can see the gqlpost network request. Within the request headers, there is a separate key-value pair for
+       the formkey.
 
 ## Step 1: Import the library and create a Poe_Client object
 
-If you don't pass formkey to the Poe_Client, you need to install node.js for generate form key.
-Here is the download link.[node.js](https://nodejs.org/en)
+Currently, formkey is a must param.
+
+~~If you don't pass formkey to the Poe_Client, you need to install node.js for generate form key.
+Here is the download link.[node.js](https://nodejs.org/en)~~
 
 Before you can use any functionality of the `Poe_Client` library, you first need to import the library and create
-a `Poe_Client` object. You need to pass the `p_b token` and `formkey` to the constructor of `Poe_Client`, and then call the `create`
+a `Poe_Client` object. You need to pass the `p_b token` and `formkey` to the constructor of `Poe_Client`, and then call
+the `create`
 method to initialize it. Here is an example:
 
 ```python
@@ -61,9 +70,9 @@ poe_client = await Poe_Client("your p_b token").create()
 poe_client = await Poe_Client("your p_b token", proxy="socks5://127.0.0.1:7890").create()
 
 # if the formkey algorithm changes, please pass your formkey
-poe_client = await Poe_Client("your p_b token","your form key").create()
+poe_client = await Poe_Client("your p_b token", "your form key").create()
 # or with a proxy
-poe_client = await Poe_Client("your p_b token","your form key", proxy="socks5://127.0.0.1:7890").create()
+poe_client = await Poe_Client("your p_b token", "your form key", proxy="socks5://127.0.0.1:7890").create()
 ```
 
 Here, `"your p_b token"` should be replaced with your actual p_b token.

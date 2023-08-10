@@ -39,8 +39,9 @@ pip install async-poe-client
   1.获取p_b: 打开poe.com,F12打开调试工具,然后选择到应用程序,在cookie里有p_b一项的值  
   2.获取formkey: 打开poe.com,F12打开调试工具,然后选择到网络一项,和某个bot对话之后,可以看到gqlpost的网络请求,在其中的请求标头中后面还有单独的formkey的键值对  
 ## 步骤1：导入库并创建Poe_Client对象
-如果你不传入formkey,你需要安装node.js才能正常使用生成formkey的功能
-这里是下载链接.[node.js](https://nodejs.org/en)
+现在formkey 必须填写才能使用,暂时未找到解决document is not defined的方法
+~~如果你不传入formkey,你需要安装node.js才能正常使用生成formkey的功能
+这里是下载链接.[node.js](https://nodejs.org/en)~~
 
 在使用`Poe_Client`库的任何功能之前，需要首先导入库并创建一个`Poe_Client`对象。需要传递`p_b token` 和 `formkey` 给`Poe_Client`
 的构造函数，然后调用`create`方法来初始化它。下面是一个示例：
