@@ -1,11 +1,9 @@
 import json
 import random
-import re
 import secrets
 import uuid
 
-import quickjs
-from loguru import logger
+# import quickjs
 
 CONST_NAMESPACE = uuid.UUID("12345678123456781234567812345678")
 
@@ -185,37 +183,39 @@ def generate_nonce(length: int = 16):
 
 
 def extract_formkey(html, script):
-    """can't use, 'document' is not defined"""
-    script_regex = r'<script>(.+?)</script>'
-    vars_regex = r'window\._([a-zA-Z0-9]{10})="([a-zA-Z0-9]{10})"'
-    key, value = re.findall(vars_regex, script)[0]
-
-    script_text = """
-      let QuickJS = undefined, process = undefined;
-      let window = {
-        document: {a:1},
-        navigator: {
-          userAgent: "a"
-        }
-      };
-    """
-    script_text += f"window._{key} = '{value}';"
-    script_text += "".join(re.findall(script_regex, html))
-
-    function_regex = r'(window\.[a-zA-Z0-9]{17})=function'
-    function_text = re.search(function_regex, script_text).group(1)
-    script_text += f"{function_text}();"
-
-    context = quickjs.Context()
-    formkey = context.eval(script_text)
-
-    salt = None
-    try:
-        salt_function_regex = r'function (.)\(_0x[0-9a-f]{6},_0x[0-9a-f]{6},_0x[0-9a-f]{6}\)'
-        salt_function = re.search(salt_function_regex, script_text).group(1)
-        salt_script = f"{salt_function}(a=>a, '', '');"
-        salt = context.eval(salt_script)
-    except Exception as e:
-        logger.warning("Failed to obtain poe-tag-id salt: " + str(e))
-
-    return formkey, salt
+    pass
+# def extract_formkey(html, script):
+#     """can't use, 'document' is not defined"""
+#     script_regex = r'<script>(.+?)</script>'
+#     vars_regex = r'window\._([a-zA-Z0-9]{10})="([a-zA-Z0-9]{10})"'
+#     key, value = re.findall(vars_regex, script)[0]
+#
+#     script_text = """
+#       let QuickJS = undefined, process = undefined;
+#       let window = {
+#         document: {a:1},
+#         navigator: {
+#           userAgent: "a"
+#         }
+#       };
+#     """
+#     script_text += f"window._{key} = '{value}';"
+#     script_text += "".join(re.findall(script_regex, html))
+#
+#     function_regex = r'(window\.[a-zA-Z0-9]{17})=function'
+#     function_text = re.search(function_regex, script_text).group(1)
+#     script_text += f"{function_text}();"
+#
+#     context = quickjs.Context()
+#     formkey = context.eval(script_text)
+#
+#     salt = None
+#     try:
+#         salt_function_regex = r'function (.)\(_0x[0-9a-f]{6},_0x[0-9a-f]{6},_0x[0-9a-f]{6}\)'
+#         salt_function = re.search(salt_function_regex, script_text).group(1)
+#         salt_script = f"{salt_function}(a=>a, '', '');"
+#         salt = context.eval(salt_script)
+#     except Exception as e:
+#         logger.warning("Failed to obtain poe-tag-id salt: " + str(e))
+#
+#     return formkey, salt

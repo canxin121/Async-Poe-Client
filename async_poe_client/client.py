@@ -482,10 +482,8 @@ class Poe_Client:
                 "apiUrl": api_url or botinfo["apiUrl"],
                 "apiKey": api_key or botinfo["apiKey"],
                 "hasLinkification": linkification or botinfo["hasLinkification"],
-                "hasMarkdownRendering": markdown_rendering
-                                        or botinfo["hasMarkdownRendering"],
-                "hasSuggestedReplies": suggested_replies
-                                       or botinfo["hasSuggestedReplies"],
+                "hasMarkdownRendering": markdown_rendering or botinfo["hasMarkdownRendering"],
+                "hasSuggestedReplies": suggested_replies or botinfo["hasSuggestedReplies"],
                 "isPrivateBot": is_private_bot or botinfo["isPrivateBot"],
                 "temperature": temperature or botinfo["temperature"],
             },
