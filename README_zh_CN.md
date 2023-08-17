@@ -33,10 +33,12 @@ pip install async-poe-client
   2.对于自己创建的bot,url_botname =
   handle,如果设置了display_name,那么在网页上看到的名字是display_name,如果没设置,看到的就是url_botname(handle)  
   但是有特殊的情况下handle并不遵循上面的规律,比如使用get_available_bots得到的所有bot的handle都永远等于url_botname
+    
 - 二:chat_code是什么? ->
   一个bot可以有多个会话窗口,而chat_code是会话窗口的唯一性标志,获取的方法和url_botname类似,例如 "https://poe.com/chat/1234567890"
   中 chat_code为 1234567890
-- 二:如何获得p_b和formkey? ->  
+    
+- 三:如何获得p_b和formkey? ->  
   1.获取p_b: 打开poe.com,F12打开调试工具,然后选择到应用程序,在cookie里有p_b一项的值  
   2.获取formkey: 打开poe.com,F12打开调试工具,然后选择到网络一项,和某个bot对话之后,可以看到gql_POST的网络请求,在其中的请求标头中后面还有单独的formkey的键值对
 
