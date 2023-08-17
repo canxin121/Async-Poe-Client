@@ -1,4 +1,5 @@
 # User Guide
+[中文说明](README_zh_CN.md)
 
 Latest Version: 0.2.9
 This is a guide on how to use the `async-poe-Client` library. Before getting started, make sure you have installed this
