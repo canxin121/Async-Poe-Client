@@ -6,3 +6,4 @@
 *.iml
 out
 gen
+local_test.py

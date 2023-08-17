@@ -1,11 +1,14 @@
 # 使用指南
-最新版本:0.1.9
+
+最新版本:0.2.9
 这是如何使用`async-poe-Client`库的指南。在开始之前，请确保你已经安装了这个库。
+
 ```
 pip install async-poe-client
 ```
 
 ## 目录
+
 - [QA](#qa)
 - [步骤1: 导入库并创建Poe_Client对象](#步骤1导入库并创建poeclient对象)
 - [步骤2: 使用Poe_Client](#步骤2使用poeclient)
@@ -14,17 +17,12 @@ pip install async-poe-client
     - [3. 修改一个bot的设置](#3修改一个bot的设置)
     - [4. 删除一个bot](#4删除一个bot)
     - [5. 和bot对话](#5和bot对话)
-        - [(1). 使用channel_url和aiohttp的支持流式输出和建议回复的函数](#1使用channelurl和aiohttp的支持流式输出和建议回复的函数)
-        - [(2). 使用dataurl和aiohttp但不支持流式输出和建议回复的函数](#2使用dataurl和aiohttp但不支持流式输出和建议回复的函数)
     - [6. 删除bot的对话记忆,重置对话(这并不会删除聊天记录中的消息)](#6删除bot的对话记忆重置对话这并不会删除聊天记录中的消息)
     - [7. 查询自己的可用的bot](#7查询自己的可用的bot)
     - [8. 批量删除自己可用的bot](#8批量删除自己可用的bot)
-    - [9. 获取bot的部分数据或设置信息](#9获取bot的部分数据或设置信息)
-    - [10. 获取聊天记录(聊天消息)](#10获取聊天记录聊天消息)
-    - [11. 删除聊天记录(聊天消息)](#11删除聊天记录聊天消息)
-        - [(1). 删除和某个bot的聊天记录](#1-删除和某个bot的聊天记录)
-        - [(2). 删除和所有bot的所有聊天记录](#2-删除和所有bot的所有聊天记录)
-    - [12. 获取其他人创建的bot(poe.com左上角explor中的bot)](#12获取其他人创建的botpoecom左上角explor中的bot)
+    - [9. 获取bot的数据或设置信息](#9获取bot的数据或设置信息)
+    - [10. 删除和bot的会话窗口](#10删除和某个bot的会话窗口)
+    - [11. 获取其他人创建的bot(poe.com左上角explore中的bot)](#11获取其他人创建的botpoecom左上角explore中的bot)
 
 # QA:
 
@@ -35,31 +33,34 @@ pip install async-poe-client
   2.对于自己创建的bot,url_botname =
   handle,如果设置了display_name,那么在网页上看到的名字是display_name,如果没设置,看到的就是url_botname(handle)  
   但是有特殊的情况下handle并不遵循上面的规律,比如使用get_available_bots得到的所有bot的handle都永远等于url_botname
+- 二:chat_code是什么? ->
+  一个bot可以有多个会话窗口,而chat_code是会话窗口的唯一性标志,获取的方法和url_botname类似,例如 "https://poe.com/chat/1234567890"
+  中 chat_code为 1234567890
 - 二:如何获得p_b和formkey? ->  
   1.获取p_b: 打开poe.com,F12打开调试工具,然后选择到应用程序,在cookie里有p_b一项的值  
-  2.获取formkey: 打开poe.com,F12打开调试工具,然后选择到网络一项,和某个bot对话之后,可以看到gqlpost的网络请求,在其中的请求标头中后面还有单独的formkey的键值对  
+  2.获取formkey: 打开poe.com,F12打开调试工具,然后选择到网络一项,和某个bot对话之后,可以看到gql_POST的网络请求,在其中的请求标头中后面还有单独的formkey的键值对
+
 ## 步骤1：导入库并创建Poe_Client对象
+
 现在formkey 必须填写才能使用,暂时未找到解决document is not defined的方法
 ~~如果你不传入formkey,你需要安装node.js才能正常使用生成formkey的功能
 这里是下载链接.[node.js](https://nodejs.org/en)~~
 
-在使用`Poe_Client`库的任何功能之前，需要首先导入库并创建一个`Poe_Client`对象。需要传递`p_b token` 和 `formkey` 给`Poe_Client`
+在使用`Poe_Client`库的任何功能之前，需要首先导入库并创建一个`Poe_Client`对象。需要传递`p_b token` 和 `formkey`
+给`Poe_Client`
 的构造函数，然后调用`create`方法来初始化它。下面是一个示例：
 
 ```python
 from async_poe_client import Poe_Client
 
-poe_client = await Poe_Client("your p_b token").create()
+# create的参数pre load,默认开启,将在创建client时自动拉取所有的bot的信息和聊天记录,用以使用,如果创建时间特别长,可以尝试设置为False
+poe_client = await Poe_Client("your p_b token", "your form key").create()
 # 也可以设置代理
-poe_client = await Poe_Client("your p_b token", proxy="socks5://127.0.0.1:7890").create()
+poe_client = await Poe_Client("your p_b token", "your form key", proxy="socks5://127.0.0.1:7890").create()
 
-# 如果formkey的算法又变了,请传入formkey
-poe_client = await Poe_Client("your p_b token","your form key").create()
-# or with a proxy
-poe_client = await Poe_Client("your p_b token","your form key", proxy="socks5://127.0.0.1:7890").create()
 ```
 
-其中，`"your p_b token"`应该被替换为你的p_b token。
+其中，`"your p_b token"`,`your form key`应该被替换为你的p_b token和formkey.
 
 ## 步骤2：使用Poe_Client
 
@@ -172,12 +173,11 @@ await poe_client.delete_bot(url_botname="test27gs2")
 
 ### 5.和bot对话
 
-#### (1).使用channel_url和aiohttp的支持流式输出和建议回复的函数
-
 函数:ask_stream()
 参数:
 
 - `url_botname:str` - bot的url名
+- `chat_code:Optional[str]` - 对应bot的的一个会话窗口的唯一标志
 - `question:str` - 询问的内容
 - `suggest_able:Optional[bool]` - 是否显示建议回复(需要该bot支持建议回复才能一并输出出来)
 - `with_chatb_reak:Optional[bool]` - 是否在对话后清除bot的记忆(即保持单对话)
@@ -186,32 +186,21 @@ await poe_client.delete_bot(url_botname="test27gs2")
 
 ```python
 # 这里的get_available_bots()可以在第8条中看到使用说明
-bots = await poe_client.get_available_bots(count=2)
-async for message in poe_client.ask_stream(url_botname=bots[1]['handle'], question="introduce async and await"):
+# 如果不传入chat_code,将自动创建一个新的会话窗口,其chat_code可以在poe_client的属性中获取
+async for message in poe_client.ask_stream(url_botname='ChatGPT', question="introduce async and await"):
+    print(message, end="")
+# 访问属性bot_code_dict可以得到一个以 url_botname为键, List[chat_code]为值的 dict,其顺序是从新到旧,第一个就是刚刚自动创建的chat_code
+chat_code = poe_client.bot_code_dict['ChatGPT'][0]
+
+# 使用刚才的chat_code继续对话
+async for message in poe_client.ask_stream(url_botname='ChatGPT', chat_code=chat_code,
+                                           question="introduce async and await"):
     print(message, end="")
 
-# 如果使用了建议回复,而且想要一个建议回复的列表,可以从bots属性中提取,它会记录某个bot的最后的建议回复
-print(poe_client.bots[bots[1]['handle']]['Suggestion'])
+# 如果使用了建议回复,而且想要一个建议回复的列表,可以从bots属性中提取,它会记录某个bot某个会话的最后的建议回复
+print(poe_client.bots['ChatGPT']['chats'][chat_code]['Suggestion'])
+
 ```
-
-#### (2).使用data_url和aiohttp但不支持流式输出和建议回复的函数
-
-函数:ask()
-
-参数:
-
-- `url_botname:str` - bot的url名
-- `question:str` - 询问的内容
-- `with_chatb_reak:Optional[bool]` - 是否在对话后清除bot的记忆(即保持单对话)
-
-返回值:str
-
-```python
-answer = await poe_client.ask(url_botname="Assistant", question="Introduce openai")
-print(answer)
-```
-
----
 
 ### 6.删除bot的对话记忆,重置对话(这并不会删除聊天记录中的消息)
 
@@ -220,11 +209,11 @@ print(answer)
 参数:
 
 - `url_botname:str` - 要清除记忆的bot的url_botname
-
-返回值:`None`
+- `chat_code:str` - 要清除的bot的会话唯一标志
+  返回值:`None`
 
 ```python
-await poe_client.send_chat_break(url_botname="Assistant")
+await poe_client.send_chat_break(url_botname="Assistant", chat_code="chat_code")
 ```
 
 ---
@@ -242,9 +231,11 @@ await poe_client.send_chat_break(url_botname="Assistant")
 返回值:`List[dict]` - 包含bot信息dict的list,这个list中的无论系统bot还是自己创建的bot,其handle都永远等于url_botname
 
 ```python
-poe_client = await Poe_Client("your p_b token").create()
-bots = await poe_client.get_available_bots(count=2)
-print(bots)
+# 在默认情况下,创建client时所有的bot的信息都会被自动加载进来,储存在bots属性中, 使用过程中的bot的创建和删除(目前不包括bot的会话窗口中自动新增发送和接受的消息,可以使用load_all_bots来主动更新)也会反映在client的bots的
+poe_client = await Poe_Client("your p_b token", "formkey").create()
+print(poe_client.bots)
+
+# 也可以主动的去获取可用的bot
 bots = await poe_client.get_available_bots(get_all=True)
 print(bots)
 ```
@@ -272,7 +263,7 @@ await poe_client.delete_available_bots(del_all=True)
 
 ---
 
-### 9.获取bot的部分数据或设置信息
+### 9.获取bot的数据或设置信息
 
 函数: get_botdata()
 
@@ -281,7 +272,7 @@ await poe_client.delete_available_bots(del_all=True)
 - `url_botname:str` - 要清除记忆的bot的url_botname
 
 返回值:  
-一个包含bot的部分聊天记录和部分信息的dict
+一个包含bot的所有聊天记录和部分信息的dict
 
 ```python
 data = await poe_client.get_botdata(url_botname="578feb1716fe43f")
@@ -304,63 +295,44 @@ print(info)
 
 ---
 
-### 10.获取聊天记录(聊天消息)
-
-注意获取的顺序是由最近到之前,但是输出时是先输出先前的,在输出现在的,也就是和你在网页上向上滑动的操作完全相同
-
-函数:get_message_history()
-
-参数:
-
-- `url_botname:str` - 要获取聊天消息的bot的url_botname
-- ` count: Optional[int] = 2` - 要或缺的消息的数量
-- `del_all: Optional[bool] = False` - 是否直接或取所有的和该bot的聊天消息
-
-返回值:`List[dict]` - 包含聊天消息dict的列表
-
-```python
-messages = await poe_client.get_message_history(url_botname="GPT-4", count=20)
-print(messages)
-messages = await poe_client.get_message_history(url_botname="GPT-4", get_all=True)
-print(messages)
-```
-
----
-
-### 11.删除聊天记录(聊天消息)
+### 10.删除和某个bot的会话窗口
 
 注意: 这个操作是不可逆的!
 
-#### (1). 删除和某个bot的聊天记录
+#### (1). 删除和某个bot的指定会话窗口
 
-函数:delete_bot_conversation
+函数:delete_chat_by_chat_code
 
 参数:
 
-- `url_botname:str` - 要删除聊天记录的bot的url_botname
-- ` count: Optional[int] = 2` - 要删除的消息的数量
-- `del_all: Optional[bool] = False` - 是否直接删除所有的和该bot的聊天消息
+- `chat_code:str` - 要删除的会话窗口
 
 返回值:`None`
 
 ```python
-await poe_client.delete_bot_conversation(url_botname="Assistant", count=2)
-await poe_client.delete_bot_conversation(url_botname="Assistant", del_all=True)
+await poe_client.delete_chat_by_chat_code(chat_code="chat_code")
 ```
 
-#### (2). 删除和所有bot的所有聊天记录
+#### (2). 删除和某个bot的指定数量的会话窗口
 
-函数:delete_all_conversations()  
-无参数  
-返回值:`None`
+函数:delete_chat_by_count()
+
+- `url_botname`
+- `count` - 要删除的数量(从上到下删除)
+- `del_all` - 是否直接删除所有会话窗口
+  返回值:`None`
 
 ```python
-await poe_client.delete_all_conversations()
+# 删除20个
+await poe_client.delete_chat_by_count(url_botname="ChatGPT", count=20)
+# 删除所有
+await poe_client.delete_chat_by_count(url_botname="ChatGPT", del_all=True)
+
 ```
 
 ---
 
-### 12.获取其他人创建的bot(poe.com左上角explor中的bot)
+### 11.获取其他人创建的bot(poe.com左上角explore中的bot)
 
 注意获取的顺序是从上到下,按照poe.com的顺序获取的
 
@@ -377,81 +349,5 @@ await poe_client.delete_all_conversations()
 bots = await poe_client.explore_bots(count=100)
 print(bots)
 bots = await poe_client.explore_bots(explore_all=True)
-print(bots)
-```
----
-### 10. Retrieving Chat History (Chat Messages)
-
-Please note that the retrieval order is from most recent to oldest, but the output is first the older ones, then the newer ones, which is exactly the same as your operation on the webpage by scrolling up.
-
-Function: `get_message_history()`
-
-Parameters:
-
-- `url_botname: str` - The url_botname of the bot for which you want to retrieve chat messages.
-- `count: Optional[int] = 2` - The number of messages to retrieve.
-- `get_all: Optional[bool] = False` - Whether to directly retrieve all chat messages with this bot.
-
-Return value: `List[dict]` - A list containing dictionaries of chat messages.
-
-```python
-messages = await poe_client.get_message_history(url_botname="GPT-4", count=20)
-print(messages)
-messages = await poe_client.get_message_history(url_botname="GPT-4", get_all=True)
-print(messages)
-```
-
----
-
-### 11. Deleting Chat History (Chat Messages)
-
-Warning: This operation is irreversible!
-
-#### (1). Deleting chat history with a specific bot
-
-Function: `delete_bot_conversation`
-
-Parameters:
-
-- `url_botname: str` - The url_botname of the bot for which you want to delete chat messages.
-- `count: Optional[int] = 2` - The number of messages to delete.
-- `del_all: Optional[bool] = False` - Whether to directly delete all chat messages with this bot.
-
-Return value: `None`
-
-```python
-await poe_client.delete_bot_conversation(url_botname="Assistant", count=2)
-await poe_client.delete_bot_conversation(url_botname="Assistant", del_all=True)
-```
-
-#### (2). Deleting all chat history with all bots
-
-Function: `delete_all_conversations()`  
-No parameters  
-Return value: `None`
-
-```python
-await poe_client.delete_all_conversations()
-```
-
----
-
-### 12. Retrieving Bots Created by Others (Bots in the "explor" at the top left of poe.com)
-
-Please note that the retrieval order is from top to bottom, in accordance with the order on poe.com.
-
-Function: `explore_bots()`
-
-Parameters:
-
-- `count: Optional[str] = 25` - The number of bots to retrieve.
-- `get_all: Optional[bool] = False` - Whether to directly retrieve all bots.
-
-Return value: `List[dict]` - A list containing dictionaries of bot information. In this list, whether it's a system bot or a bot you created, their handle is always equal to url_botname.
-
-```python
-bots = await poe_client.explore_bots(count=100)
-print(bots)
-bots = await poe_client.explore_bots(get_all=True)
 print(bots)
 ```

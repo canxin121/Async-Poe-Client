@@ -1,319 +1,301 @@
 # User Guide
 
-latest version:0.1.9  
-[中文使用指南](README_zh_CN.md)
-
-This is a guide on how to use the `async-poe-Client` library. Before starting, make sure you've installed this library.
+Latest Version: 0.2.9
+This is a guide on how to use the `async-poe-Client` library. Before getting started, make sure you have installed this
+library.
 
 ```
 pip install async-poe-client
 ```
 
-## Contents
+## Table of Contents
 
 - [QA](#qa)
-- [Step 1: Import the library and create a Poe_Client object](#step-1-import-the-library-and-create-a-poeclient-object)
-- [Step 2: Use Poe_Client](#step-2-use-poeclient)
-    - [1. Get Account Subscription Information](#1-get-the-subscription-information-of-the-account)
+- [Step 1: Import Libraries and Create Poe_Client Object](#step-1-import-the-library-and-create-a-poeclient-object)
+- [Step 2: Using Poe_Client](#step-2-using-poeclient)
+    - [1. Get Subscription Information](#1-get-subscription-information-for-an-account)
     - [2. Create a Bot](#2-create-a-bot)
-    - [3. Edit a Bot’s Settings](#3-edit-a-bots-settings)
+    - [3. Modify Bot Settings](#3-modify-the-settings-of-a-bot)
     - [4. Delete a Bot](#4-delete-a-bot)
     - [5. Chat with a Bot](#5-chat-with-a-bot)
-        - [(1). Use channel_url and aiohttp supported functions for streaming output and suggested replies](#1-using-channelurl-and-aiohttp-support-for-streaming-output-and-suggested-replies)
-        - [(2). Use data_url and aiohttp supported functions without suggested replies and streaming output](#2-using-dataurl-and-aiohttp-but-does-not-support-suggested-replies-and-streaming-output)
-    - [6. Delete a Bot's Dialogue Memory, Reset Conversation (This won't delete messages in chat history)](#6-deleting-a-bots-dialogue-memory-resetting-the-dialogue-this-does-not-delete-messages-in-the-chat-history)
-    - [7. Get your Available Bots](#7-get-your-own-available-bots)
-    - [8. Bulk Delete your Available Bots](#8-bulk-delete-your-available-bots)
-    - [9. Get partial data or full settings of a bot](#9-get-partial-data-or-full-settings-of-a-bot)
-    - [10. Get Chat History (Chat Messages)](#10-get-chat-history-chat-messages)
-    - [11. Delete Chat History (Chat Messages)](#11-delete-chat-history-chat-messages)
-        - [(1). Delete Chat History with a Certain Bot](#1-delete-chat-history-with-a-certain-bot)
-        - [(2). Delete All Chat History with All Bots](#2-delete-all-chat-history-with-all-bots)
-    - [12. Get Bots Created by Others (Bots in Explore Page)](#12-get-bots-created-by-others-bots-in-explore-page)
+    - [6. Clear Bot's Conversation Memory and Reset Dialogue (Does Not Delete Chat Messages)](#6-reset-the-conversation-memory-of-a-bot-without-deleting-chat-history)
+    - [7. Retrieve User's Available Bots](#7-get-available-bots)
+    - [8. Batch Delete User's Available Bots](#8-batch-delete-available-bots)
+    - [9. Get Bot Data or Settings Information](#9-get-bot-data-or-settings-information)
+    - [10. Delete Chat Windows with a Bot](#10-delete-chat-windows-with-a-bot)
+    - [11. Get Bots Created by Others (From "Explore" Section on poe.com)](#11-get-bots-created-by-others-from-the-explore-section-on-poecom)
 
 # QA:
 
-- 1.What is url_botname? -> When using a certain bot on poe, it is the name of the bot in the link ("ChatGPT"
-  in "[https://poe.com/ChatGPT ↗](https://poe.com/ChatGPT)").  
-  The relationship between this url_botname and other names can be understood as:
-    1. For the system's built-in bots, the name of the bot you see on the poe web page and the url_botname are always
-       equal (but neither equals the handle).
-    2. For bots you create, url_botname = handle. If display_name is set, the name you see on the web page is
-       display_name;
-       if not set, you see url_botname (handle).
-       However, there are special cases where the handle does not follow the above rules, such as the handle of all bots
-       obtained using get_available_bots always equals url_botname.
-- 2.How to obtain p_b and formkey? ->
-    1. To obtain p_b: Open poe.com, press F12 to open the debugging tool, then select the application. You can find the
-       value of p_b in the cookies.
-    2. To obtain formkey: Open poe.com, press F12 to open the debugging tool, then select Network. After chatting with a
-       bot, you can see the gqlpost network request. Within the request headers, there is a separate key-value pair for
-       the formkey.
+- Question: What is url_botname? -> When using a specific bot in Poe, the bot's name in the
+  URL ("https://poe.com/ChatGPT" where 'ChatGPT' is the url_botname) is referred to as url_botname. The relationship
+  between url_botname and other names can be understood as follows:
+
+    1. For built-in system bots, the bot's name you see on the Poe website will always be equal to url_botname (but not
+       equal to handle).
+    1. For self-created bots, url_botname = handle. If a display_name is set, the name you see on the website will be
+       the display_name. Otherwise, it will be the url_botname (handle). However, there are some special cases where the
+       handle does not follow the above pattern, such as when using get_available_bots, where all bot handles are always
+       equal to url_botname.
+
+- Question: What is chat_code? ->
+  A bot can have multiple chat windows, and chat_code is the unique identifier for each chat window. The method to
+  retrieve it is similar to url_botname. For example, in "https://poe.com/chat/1234567890", the chat_code is 1234567890.
+
+- Question: How to obtain p_b and formkey? ->
+
+    1. Obtaining p_b: Open poe.com, use F12 to open the debugging tools, and navigate to the Application tab. In the
+       cookies, there will be a value for p_b.
+    1. Obtaining formkey: Open poe.com, use F12 to open the debugging tools, and navigate to the Network tab. After
+       having a conversation with a bot, you can see the gql_POST network request, where the request headers contain a
+       separate formkey key-value pair.
 
 ## Step 1: Import the library and create a Poe_Client object
 
-Currently, formkey is a must param.
+Now the formkey must be filled in to use the library. Currently, no solution has been found for the "document is not
+defined" error.
+~~If you do not pass the formkey, you need to install Node.js to use the formkey generation feature. Here is the
+download link: [node.js](https://nodejs.org/en)~~
 
-~~If you don't pass formkey to the Poe_Client, you need to install node.js for generate form key.
-Here is the download link.[node.js](https://nodejs.org/en)~~
-
-Before you can use any functionality of the `Poe_Client` library, you first need to import the library and create
-a `Poe_Client` object. You need to pass the `p_b token` and `formkey` to the constructor of `Poe_Client`, and then call
-the `create`
+Before using any functionality of the `Poe_Client` library, you need to import the library and create a `Poe_Client`
+object. You need to pass the `p_b token` and `formkey` to the constructor of `Poe_Client`, and then call the `create`
 method to initialize it. Here is an example:
 
 ```python
 from async_poe_client import Poe_Client
 
-poe_client = await Poe_Client("your p_b token").create()
-# or with a proxy
-poe_client = await Poe_Client("your p_b token", proxy="socks5://127.0.0.1:7890").create()
-
-# if the formkey algorithm changes, please pass your formkey
+# If the creation process takes a long time, you can try setting preload to False
 poe_client = await Poe_Client("your p_b token", "your form key").create()
-# or with a proxy
+# You can also set a proxy
 poe_client = await Poe_Client("your p_b token", "your form key", proxy="socks5://127.0.0.1:7890").create()
 ```
 
-Here, `"your p_b token"` should be replaced with your actual p_b token.
+In the above code, `"your p_b token"` and `"your form key"` should be replaced with your actual p_b token and formkey.
 
-## Step 2: Use Poe_Client
+## Step 2: Using Poe_Client
 
-After creating the `Poe_Client`, you can use it to perform a lot of operations.
+Once you have created `Poe_Client`, you can perform various operations with it.
 
----
+______________________________________________________________________
 
-### 1. Get the subscription information of the account
+### 1. Get subscription information for an account
 
-You can get this directly by accessing the property value
+You can directly access the attribute value.
 
 ```python
 print(poe_client.subscription)
 ```
 
-This will return a dictionary formatted subscription information.
+It returns a dictionary containing the subscription information.
 
----
+______________________________________________________________________
 
 ### 2. Create a bot
 
-Function: create_bot()
+Function: `create_bot()`
 
 Parameters:
 
-- `handle: str` - The name of the new bot, which must be a string. This name must be unique throughout poe.com, and it
-  should not be the same as any other person's name.
-- `prompt: str = ""` - The preset personality of the new bot. This is an optional string, with the default value being
-  an empty string.
-- `display_name: Optional[str] = `None`` - The display name of the new bot. This is an optional string, with a default
-  value of `None`. If not provided, it will display the handle.
-- `base_model: str = "chinchilla"` - The model used by the new bot. This is an optional string. The choices include: "
-  chinchilla" (ChatGPT) or "a2" (Claude). If subscribed, you can use "beaver" (ChatGPT4) or "a2_2" (Claude-2-100k).
-- `description: str = ""` - The description of the new bot. This is an optional string, with the default value being an
+- `handle: str` - The name of the new bot. It must be a string and must be unique throughout poe.com. It cannot have the
+  same name as another bot.
+- `prompt: str = ""` - The preset personality of the new bot. It is an optional string parameter and defaults to an
   empty string.
-- `intro_message: str = ""` - The introductory information of the new bot. This is an optional string. If it is an empty
-  string, then the bot will not have any introductory information.
-- `prompt_public: bool = True` - Whether the preset personality should be publicly visible. This is an optional boolean,
-  with the default value being True.
-- `profile_picture_url: Optional[str] = `None`` - The URL of the bot's profile picture. This is an optional string, with
-  the default value being `None`. Using this library does not actually allow you to upload custom images.
-- `linkification: bool = False` - Whether the bot should convert some text in the response into clickable links. This is
-  an optional boolean, with the default value being False.
-- `markdown_rendering: bool = True` - Whether the bot's response should enable markdown rendering. This is an optional
-  boolean, with the default value being True.
-- `suggested_replies: bool = True` - Whether the bot should suggest possible replies after each response. This is an
-  optional boolean, with the default value being False.
-- `private: bool = False` - Whether the bot should be private. This is an optional boolean, with the default value being
+- `display_name: Optional[str] = `None\`\` - The display name of the new bot. It is an optional string parameter and
+  defaults to `None`. If not passed, the handle will be displayed.
+- `base_model: str = "chinchilla"` - The model used by the new bot. It is an optional string parameter. The options
+  are: "chinchilla" (ChatGPT) or "a2" (Claude). If subscribed, you can use "beaver" (ChatGPT4) or "a2_2" (
+  Claude-2-100k).
+- `description: str = ""` - The description of the new bot. It is an optional string parameter and defaults to an empty
+  string.
+- `intro_message: str = ""` - The introduction message of the new bot. It is an optional string parameter. If it is an
+  empty string, the bot will have no introduction message.
+- `prompt_public: bool = True` - Whether the preset personality should be publicly visible. It is an optional boolean
+  parameter and defaults to True.
+- `profile_picture_url: Optional[str] = `None\`\` - The URL of the profile picture for the bot. It is an optional string
+  parameter and defaults to `None`. The library does not support uploading custom images.
+- `linkification: bool = False` - Whether the bot should convert certain text in responses into clickable links. It is
+  an optional boolean parameter and defaults to False.
+- `markdown_rendering: bool = True` - Whether the bot's responses should enable markdown rendering. It is an optional
+  boolean parameter and defaults to True.
+- `suggested_replies: bool = True` - Whether the bot should suggest possible replies after each response. It is an
+  optional boolean parameter and defaults to False.
+- `private: bool = False` - Whether the bot should be private. It is an optional boolean parameter and defaults to
   False.
-- `temperature: Optional[float] = `None`` - The temperature of the new bot. This is an optional float, with the default
-  value being `None`.
+- `temperature: Optional[float] = `None\`\` - The temperature of the new bot. It is an optional float parameter and
+  defaults to `None`.
 
-If you want the new bot to use your own API (you can get the official poe tutorial for
-accessing [here ↗](https://github.com/poe-platform/api-bot-tutorial)), please use the following parameters:
+If you want the new bot to use your own API (you can find the official Poe API integration
+tutorial [here](https://github.com/poe-platform/api-bot-tutorial)), use the following parameters:
 
 - `api_bot = False` - Whether the bot is your own API bot.
-- `api_key = `None`` - The API key of the new bot.
-- `api_url = `None`` - The API URL of the new bot.
-  Return value: `None`
+- `api_key = `None\`\` - The API key for the new bot.
+- `api_url = `None\`\` - The API URL for the new bot.
 
-The simplest usage is shown below. You only need to pass the handle and prompt to create a bot.
+Return value: `None`
+
+The simplest usage is as follows, where you only need to pass the handle and prompt to create a bot:
 
 ```python
-await poe_client.create_bot(handle="testbotcx1", prompt="a ai assistant")
+await poe_client.create_bot(handle="testbotcx1", prompt="a ai assistant", p)
 ```
 
----
+______________________________________________________________________
 
-### 3. Edit a Bot’s Settings
+### 3. Modify the settings of a bot
 
 Function: `edit_bot()`
 
-Parameters:
+Parameters:\
+Note that `url_botname` is the original name of the bot, and the other parameters are the values to be modified. If a
+parameter is not passed, its value will remain unchanged.
 
-Note that only `url_botname` is the original name of the bot, the rest are parameters to be modified. If not passed, the
-parameter will remain unchanged.
-
-- `url_botname: str` - The url_botname of the bot to be modified. This must be a string.
-- `handle: Optional[str]` - The name of the bot. This must be a string and must be unique across poe.com, i.e., it
-  should not be the same as other bots.
-- `prompt: Optional[str] = ""` - The preset personality of the bot. This is an optional string, defaulting to an empty
-  string.
-- `display_name: Optional[str] = None` - The display name of the bot. This is an optional string, defaulting to `None`.
-  If not passed, the handle will be displayed.
-- `base_model: Optional[str] = "chinchilla"` - The model used by the bot. This is an optional string. Options include: "
+- `url_botname: str` - The `url_botname` of the bot to be modified, must be a string.
+- `handle: Optional[str]` - The name of the bot, must be a string and must be unique across the entire poe.com. It
+  cannot be the same as any other bot.
+- `prompt: Optional[str] = ""` - The preset personality of the bot, optional string, defaults to an empty string.
+- `display_name: Optional[str] = `None\`\` - The display name of the bot, optional string, defaults to `None`. If not
+  passed, the handle will be displayed.
+- `base_model: Optional[str] = "chinchilla"` - The model used by the bot, optional string. Options include: "
   chinchilla" (ChatGPT) or "a2" (Claude). If subscribed, you can use "beaver" (ChatGPT4) or "a2_2" (Claude-2-100k).
-- `description: Optional[str] = ""` - The description of the bot. This is an optional string, defaulting to an empty
-  string.
-- `intro_message: Optional[str] = ""` - The introduction message of the bot. This is an optional string. If this is an
-  empty string, then the bot will not have an introduction message.
-- `prompt_public: Optional[bool] = True` - Whether the preset personality should be publicly visible. This is an
-  optional boolean, defaulting to True.
-- `profile_picture_url: Optional[str] = None` - The URL of the bot's profile picture. This is an optional string,
-  defaulting to `None`. Using this library, you cannot actually upload custom images.
-- `linkification: Optional[bool] = False` - Whether the bot should convert some text in responses into clickable links.
-  This is an optional boolean, defaulting to False.
-- `markdown_rendering: Optional[bool] = True` - Whether the bot's responses enable markdown rendering. This is an
-  optional boolean, defaulting to True.
-- `suggested_replies: Optional[bool] = False` - Whether the bot should suggest possible replies after each response.
-  This is an optional boolean, defaulting to False.
-- `private: Optional[bool] = False` - Whether the bot should be private. This is an optional boolean, defaulting to
-  False.
-- `temperature: Optional[float] = None` - The temperature of the bot. This is an optional floating-point number,
-  defaulting to `None`.
+- `description: Optional[str] = ""` - The description of the bot, optional string, defaults to an empty string.
+- `intro_message: Optional[str] = ""` - The introduction message of the bot, optional string. If it is an empty string,
+  the bot will have no introduction message.
+- `prompt_public: Optional[bool] = True` - Whether the preset personality should be publicly visible, optional boolean,
+  defaults to True.
+- `profile_picture_url: Optional[str] = `None\`\` - The URL of the profile picture of the bot, optional string, defaults
+  to `None`. With this library, it is not possible to upload custom images.
+- `linkification: Optional[bool] = False` - Whether the bot should convert certain text in the response into clickable
+  links, optional boolean, defaults to False.
+- `markdown_rendering: Optional[bool] = True` - Whether the bot's response should enable markdown rendering, optional
+  boolean, defaults to True.
+- `suggested_replies: Optional[bool] = False` - Whether the bot should suggest possible replies after each response,
+  optional boolean, defaults to False.
+- `private: Optional[bool] = False` - Whether the bot should be private, optional boolean, defaults to False.
+- `temperature: Optional[float] = `None\`\` - The temperature of the bot, optional float, defaults to `None`.
 
-If you want the new bot to use your own API (the official Poe access tutorial can be
-found [here ↗](https://github.com/poe-platform/api-bot-tutorial)), please use the following parameters:
+If you want the new bot to use your own API (you can get the official Poe API integration
+tutorial [here](https://github.com/poe-platform/api-bot-tutorial)), use the following parameters:
 
 - `api_bot = False` - Whether the bot is your own API bot.
-- `api_key = None` - The API key for the new bot.
-- `api_url = None` - The API URL for the new bot.
+- `api_key = `None\`\` - The API key for the new bot.
+- `api_url = `None\`\` - The API URL for the new bot.
 
 ```python
 await poe_client.edit_bot(url_botname="test27gs", handle="test27gs2", prompt="a computer programmer")
 ```
 
----
+______________________________________________________________________
 
 ### 4. Delete a bot
 
-Note, this operation is irreversible!
+Note: This operation is irreversible!
 
 Function: `delete_bot()`
 
 Parameters:
 
-- `url_botname: str` - The url_botname of the bot.
+- `url_botname: str` - The URL name of the bot.
 
-Return value: `None`
+Returns: `None`
 
 ```python
 await poe_client.delete_bot(url_botname="test27gs2")
 ```
 
----
+______________________________________________________________________
 
-### 5. Chat with a Bot
-
-#### (1). Using channel_url and aiohttp support for streaming output and suggested replies
+### 5. Chat with a bot
 
 Function: `ask_stream()`
 
 Parameters:
 
-- `url_botname: str` - The url_botname of the bot.
-- `question: str` - The content of the query.
-- `suggest_able: Optional[bool]` - Whether to display suggested responses (the bot must support suggested responses to
-  output them together).
-- `with_chat_break: Optional[bool]` - Whether to clear the bot's memory after the dialogue (i.e., maintain a single
-  dialogue).
+- `url_botname: str` - The URL name of the bot.
+- `chat_code: Optional[str]` - The unique identifier of a conversation window for the corresponding bot.
+- `question: str` - The content of the question.
+- `suggest_able: Optional[bool]` - Whether to display suggested replies (requires the bot to support suggested replies
+  to be included).
+- `with_chatb_reak: Optional[bool]` - Whether to clear the bot's memory after the conversation (i.e., maintain a single
+  conversation).
 
-Return value: `AsyncGenerator` of `str`
+Returns: `AsyncGenerator` of str
 
 ```python
-# The usage of get_available_bots() can be seen in section 8.
-bots = await poe_client.get_available_bots(count=2)
-async for message in poe_client.ask_stream(url_botname=bots[1]['handle'], question="introduce async and await"):
+# The usage of 'get_available_bots()' can be seen in item 8.
+# If chat_code is not passed, a new conversation window will be automatically created, and its chat_code can be obtained from the poe_client attribute.
+async for message in poe_client.ask_stream(url_botname='ChatGPT', question="introduce async and await"):
     print(message, end="")
-# If suggested replies are used and a list of suggested replies is desired, you can extract from the bots property.
-# It records the latest suggested replies of a bot.
-print(poe_client.bots[bots[1]['handle']]['Suggestion'])
+# The bot_code_dict attribute can be accessed to get a dictionary with url_botname as the key and List[chat_code] as the value. The order is from newest to oldest, and the first one is the chat_code that was just automatically createdchat_code = poe_client.bot_code_dict['ChatGPT'][0]
+
+# Continue the conversation using the chat_code obtained earlier
+async for message in poe_client.ask_stream(url_botname='ChatGPT', chat_code=chat_code,
+                                           question="introduce async and await"):
+    print(message, end="")
+
+# If suggested replies are used and you want to get a list of suggested replies, you can extract it from the bots attribute. It will record the last suggested replies for a specific bot and conversation.
+print(poe_client.bots['ChatGPT']['chats'][chat_code]['Suggestion'])
 ```
 
-#### (2). Using data_url and aiohttp but does not support suggested replies and streaming output
-
-Function: `ask()`
-
-Parameters:
-
-- `url_botname: str` - The url_botname of the bot.
-- `question: str` - The content of the query.
-- `with_chat_break: Optional[bool]` - Whether to clear the bot's memory after the dialogue (i.e., maintain a single
-  dialogue).
-
-Return value: `str`
-
-```python
-answer = await poe_client.ask(url_botname="Assistant", question="Introduce openai")
-print(answer)
-```
-
----
-
-### 6. Deleting a bot's dialogue memory, resetting the dialogue (This does not delete messages in the chat history)
+### 6. Reset the conversation memory of a bot (without deleting chat history)
 
 Function: `send_chat_break()`
 
 Parameters:
 
-- `url_botname: str` - The url_botname of the bot whose memory you want to clear.
+- `url_botname: str` - The URL name of the bot whose memory is to be cleared.
+- `chat_code: str` - The unique identifier of the conversation to be cleared.
 
-Return value: `None`
+Returns: `None`
 
 ```python
-await poe_client.send_chat_break(url_botname="Assistant")
+await poe_client.send_chat_break(url_botname="Assistant", chat_code="chat_code")
 ```
 
----
+______________________________________________________________________
 
-### 7. Get your own available bots
+### 7. Get available bots
 
-Note that the query order is from top to bottom according to the order of the left sidebar on poe.com.  
+Note that the order of retrieval is based on the order in the left sidebar of poe.com, from top to bottom.
+
 Function: `get_available_bots()`
 
 Parameters:
 
-- `count: Optional[str] = 25` - The number of bots to get.
-- `get_all: Optional[bool] = False` - Whether to directly get all bots.
+- `count: Optional[str] = 25` - The number of bots to retrieve.
+- `get_all: Optional[bool] = False` - Whether to retrieve all available bots.
 
-Return value: `List[dict]` - A list containing dictionaries of bot information. In this list, whether it's a system bot
-or a bot you created, their handle is always equal to url_botname.
+Returns: `List[dict]` - A list containing dictionaries of bot information. The `handle` of both system bots and
+user-created bots will always be the same as the `url_botname`.
 
 ```python
-poe_client = await Poe_Client("your p_b token").create()
-bots = await poe_client.get_available_bots(count=2)
-print(bots)
+# By default, when creating the client, the information of all bots is automatically loaded and stored in the `bots` attribute. The process of creating and deleting bots (excluding automatically added sent and received messages in chat windows) will also be reflected in the `bots` attribute of the client.
+poe_client = await Poe_Client("your p_b token", "formkey").create()
+print(poe_client.bots)
+
+# You can also actively retrieve available bots
 bots = await poe_client.get_available_bots(get_all=True)
 print(bots)
 ```
 
----
+______________________________________________________________________
 
-### 8. Bulk Delete your Available Bots
+### 8. Batch delete available bots
 
-Please note that the deletion order is from top to bottom according to the order of the left sidebar on poe.com, and if
-you encounter a system-supplied bot, it will be skipped directly but will also be counted in the quantity.
+Note that the deletion order is based on the order in the left sidebar of poe.com, and if a system bot is encountered,
+it will be skipped. However, it is counted in the quantity.
 
-Warning: This operation is irreversible!
+Note: This operation is irreversible!
+
 Function: `delete_available_bots()`
 
 Parameters:
 
-- `count: Optional[int] = 2` - The number of bots to be deleted (note this cannot delete system bots, so the actual
-  number deleted may not match this count).
-- `del_all: Optional[bool] = False` - Whether to directly delete all bots (note that deleting all bots may take a long
-  time, depending on the number of bots you have).
+- `count: Optional[int] = 2` - The number of bots to delete (Note that this does not include system bots, so the actual
+  number of deletions may be different).
+- `del_all: Optional[bool] = False` - Whether to delete all available bots (Note that deleting all bots may take a long
+  time depending on the number of bots you have).
 
-Return value: `None`
+Returns: `None`
 
 ```python
 await poe_client.delete_available_bots(count=2)
@@ -322,16 +304,16 @@ await poe_client.delete_available_bots(del_all=True)
 
 ---
 
-### 9. Get partial data or full settings of a bot
+### 9. Get bot data or settings information
 
 Function: `get_botdata()`
 
 Parameters:
 
-- `url_botname: str` - The url_botname of the bot whose memory you want to clear.
+- `url_botname: str` - The URL name of the bot.
 
-Return value:  
-A dictionary containing some of the bot's chat history and information.
+Returns:\
+A dictionary containing all chat records and partial information of the bot.
 
 ```python
 data = await poe_client.get_botdata(url_botname="578feb1716fe43f")
@@ -342,93 +324,73 @@ Function: `get_bot_info()`
 
 Parameters:
 
-- `url_botname: str` - The url_botname of the bot whose memory you want to clear.
+- `url_botname: str` - The URL name of the bot.
 
-Return value:  
-A dictionary containing all the information of the bot, such as the parameters when creating or editing the bot, for
-example, prompt and personality preset.
+Returns:\
+A dictionary containing all information of the bot, such as prompt and persona, which are the parameters used when
+creating or editing the bot.
 
 ```python
 info = await poe_client.get_bot_info(url_botname="578feb1716fe43f")
 print(info)
 ```
 
----
+______________________________________________________________________
 
-### 10. Get Chat History (Chat Messages)
+### 10. Delete chat windows with a bot
 
-Please note that the retrieval order is from most recent to oldest, but the output is first the older ones, then the
-newer ones, which is exactly the same as your operation on the webpage by scrolling up.
+Note: This operation is irreversible!
 
-Function: `get_message_history()`
+#### (1) Delete a specific chat window with a bot
 
-Parameters:
-
-- `url_botname: str` - The url_botname of the bot for which you want to retrieve chat messages.
-- `count: Optional[int] = 2` - The number of messages to retrieve.
-- `get_all: Optional[bool] = False` - Whether to directly retrieve all chat messages with this bot.
-
-Return value: `List[dict]` - A list containing dictionaries of chat messages.
-
-```python
-messages = await poe_client.get_message_history(url_botname="GPT-4", count=20)
-print(messages)
-messages = await poe_client.get_message_history(url_botname="GPT-4", get_all=True)
-print(messages)
-```
-
----
-
-### 11. Delete Chat History (Chat Messages)
-
-Warning: This operation is irreversible!
-
-#### (1). Delete Chat History with a Certain Bot
-
-Function: `delete_bot_conversation`
+Function: `delete_chat_by_chat_code()`
 
 Parameters:
 
-- `url_botname: str` - The url_botname of the bot for which you want to delete chat messages.
-- `count: Optional[int] = 2` - The number of messages to delete.
-- `del_all: Optional[bool] = False` - Whether to directly delete all chat messages with this bot.
+- `chat_code: str` - The chat code of the conversation window to delete.
 
-Return value: `None`
+Returns: `None`
 
 ```python
-await poe_client.delete_bot_conversation(url_botname="Assistant", count=2)
-await poe_client.delete_bot_conversation(url_botname="Assistant", del_all=True)
+await poe_client.delete_chat_by_chat_code(chat_code="chat_code")
 ```
 
-#### (2). Delete All Chat History with All Bots
+#### (2) Delete a specified number of chat windows with a bot
 
-Function: `delete_all_conversations()`  
-No parameters  
-Return value: `None`
+Function: `delete_chat_by_count()`
+
+- `url_botname: str`
+- `count: int` - The number of chat windows to delete (from top to bottom).
+- `del_all: bool` - Whether to delete all chat windows.
+
+Returns: `None`
 
 ```python
-await poe_client.delete_all_conversations()
+# Delete 20 chat windows
+await poe_client.delete_chat_by_count(url_botname="ChatGPT", count=20)
+# Delete all chat windows
+await poe_client.delete_chat_by_count(url_botname="ChatGPT", del_all=True)
 ```
 
----
+______________________________________________________________________
 
-### 12. Get Bots Created by Others (Bots in [explore](https://poe.com/explore_bots?category=All) page)
+### 11. Get bots created by others (from the "Explore" section on poe.com)
 
-Please note that the retrieval order is from top to bottom, in accordance with the order on poe.com.
+Note that the retrieval order is from top to bottom, based on the order on poe.com.
 
 Function: `explore_bots()`
 
 Parameters:
 
 - `count: Optional[str] = 25` - The number of bots to retrieve.
-- `get_all: Optional[bool] = False` - Whether to directly retrieve all bots.
+- `get_all: Optional[bool] = False` - Whether to retrieve all available bots.
 
-Return value: `List[dict]` - A list containing dictionaries of bot information. In this list, whether it's a system bot
-or a bot you created, their handle is always equal to url_botname.
+Returns: `List[dict]` - A list containing dictionaries of bot information. The `handle` of both system bots and
+user-created bots will always be the same as the `url_botname`.
 
 ```python
 bots = await poe_client.explore_bots(count=100)
 print(bots)
-bots = await poe_client.explore_bots(get_all=True)
+bots = await poe_client.explore_bots(explore_all=True)
 print(bots)
 ```
