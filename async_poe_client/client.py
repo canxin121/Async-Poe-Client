@@ -5,12 +5,13 @@ import random
 import re
 import time
 import uuid
-from typing import List, Union, AsyncGenerator, Optional
+from typing import List, Union, AsyncGenerator, Optional, Tuple
 
 import aiohttp
 from aiohttp_socks import ProxyConnector
 from loguru import logger
 
+from .type import Text, ChatTiTleUpdate, SuggestRely, ChatCodeUpdate
 from .util import (
     HOME_URL,
     GQL_URL,
@@ -143,6 +144,7 @@ class Poe_Client:
         Note:
             This function should be called after creating a new Async_Poe_Client instance to ensure that all necessary data is fetched and set up.
         """
+        logger.info("Creating client -----")
         retry = 3
         while retry >= 0:
             try:
@@ -519,9 +521,9 @@ class Poe_Client:
         logger.info("Succeed to explore bots")
         return bots[:count]
 
-    async def create_new_chat(self, url_botname: str, question: str):
+    async def create_new_chat(self, url_botname: str, question: str) -> Tuple[int, int]:
         """
-        创建一个bot的新的对话
+        创建一个bot的新的对话,返回human_msg_id和chat_code
         """
         if url_botname not in self.bots.keys():
             self.bots[url_botname] = await self.get_botdata(url_botname)
@@ -546,7 +548,7 @@ class Poe_Client:
         logger.info(f"Succeed to send message to {url_botname}")
 
         return [a['node'] for a in data['messagesConnection']['edges'] if a['node']['author'] == 'human'][0][
-            'messageId']
+            'messageId'], data['chatCode']
 
     async def send_message_to_chat(
             self, chat_code: str, url_botname: str, question: str, with_chat_break: bool = False  # noqa: E501
@@ -567,7 +569,7 @@ class Poe_Client:
             RuntimeError: If there is an error in extracting the message ID from the response.
 
         Note:
-            This function sends a message to the bot but does not retrieve the bot's response. The 'ask' or 'ask_stream' function should be used to send and retrieve the bot's response.
+            This function sends a message to the bot but does not retrieve the bot's response. The 'ask_stream_raw' or 'ask_stream' function should be used to send and retrieve the bot's response.
 
         """
         if url_botname not in self.bots.keys():
@@ -597,16 +599,16 @@ class Poe_Client:
             else:
                 raise Exception(f"Daily limit reached for {url_botname}.")
         try:
+            logger.info(f"Succeed to send message to {url_botname}")
             human_message = message_data["data"]["messageEdgeCreate"]["message"]
             human_message_id = human_message["node"]["messageId"]
-            logger.info(f"Succeed to send message to {url_botname}")
             return human_message_id
         except TypeError:
             raise RuntimeError(
                 "Failed to extract human_message and human_message_id from response when asking: Unknown Error"
             )
 
-    async def ask_stream(
+    async def ask_stream_raw(
             self,
             url_botname: str,
             question: str,
@@ -625,7 +627,7 @@ class Poe_Client:
             suggest_able (bool, optional): If set to True, suggested replies from the bot will be included in the responses. Default is False.
 
         Returns:
-            AsyncGenerator[str]: An asynchronous generator that yields the bot's responses as they arrive.
+            AsyncGenerator[Any]: An asynchronous generator that yields the bot's raw responses as they arrive.
 
         Raises:
             Exception: If there is a failure in receiving messages from the bots.
@@ -639,14 +641,13 @@ class Poe_Client:
 
         retry = 3
         error = "Unknown error"
-        human_message_id = 0
         while retry >= 0:
             if retry == 0:
                 raise error
             try:
                 if not chat_code:
-                    human_message_id = await self.create_new_chat(url_botname, question)
-                    chat_code = self.bot_code_dict[url_botname][0]
+                    human_message_id, chat_code = await self.create_new_chat(url_botname, question)
+                    yield ChatCodeUpdate(content=chat_code)
                 else:
                     human_message_id = await self.send_message_to_chat(
                         chat_code, url_botname, question, with_chat_break
@@ -658,108 +659,88 @@ class Poe_Client:
                 pass
 
         async with aiohttp.ClientSession(**self.session_args) as client:
-            last_text = ""
-            yield_header = False
-            suggestion_list = []
             self.bots[url_botname]["Suggestion"] = []
-            retry = 10
-            suggestion_lost = 10
-            while retry >= 0:
-                if retry == 0:
-                    raise Exception(
-                        "Failed to get answer form poe too many times:No Reply!"
-                    )
-                try:
-                    response = await client.get(self.channel_url)
-                    raw_data = await response.json()
-                    if "messages" not in raw_data:
-                        retry -= 1
-                        await asyncio.sleep(1)
-                        if retry == 0:
-                            raise Exception(
-                                "Failed to get answer form poe too many times:No Reply!"
-                            )
-                        continue
-                    data = json.loads(raw_data["messages"][-1])
-                    if "messageAdded" in data["payload"]["data"]:
-                        message = data["payload"]["data"][
-                            "messageAdded"
-                        ]
-                    else:
-                        continue
-                    if message["messageId"] > human_message_id:
-                        plain_text = message["text"][len(last_text):]
-                        last_text = message["text"]
-                        if (
-                                self.bots[url_botname]['bot'][
-                                    "hasSuggestedReplies"
-                                ]
-                                and suggest_able
-                        ):
-                            if plain_text:
-                                retry = 10
-                                yield plain_text
-                            elif message["state"] == "complete":
-                                if len(message["suggestedReplies"]) == 0:
-                                    suggestion_lost -= 1
-                                    await asyncio.sleep(0.5)
-                                    if suggestion_lost <= 0:
-                                        logger.error(
-                                            "Failed to get suggestions:Poe didn't send suggestions"
-                                        )
-                                        break
-                                else:
-                                    if len(message["suggestedReplies"]) == len(
-                                            suggestion_list
-                                    ):
-                                        suggestion_lost -= 1
-                                        await asyncio.sleep(0.5)
-                                        if suggestion_lost <= 0:
-                                            logger.error(
-                                                "Failed to get enough suggestions:Poe didn't send suggestions"
-                                            )
-                                            break
-                                    else:
-                                        suggestion_lost = 10
-                                    if not yield_header:
-                                        yield_header = True
-                                        yield "\n\nSuggested Reply:"
-                                    for suggest in message["suggestedReplies"]:
-                                        if suggest not in suggestion_list:
-                                            yield f"\n{str(len(suggestion_list) + 1)}:{suggest}"
-                                            suggestion_list.append(suggest)
-                                        self.bots[url_botname][
-                                            "Suggestion"
-                                        ] = suggestion_list
-                                    if len(suggestion_list) >= 3:
-                                        self.bots[url_botname]['chats'][chat_code]['Suggestion'] = suggestion_list
-                                        break
-                            else:
-                                retry -= 1
-                                await asyncio.sleep(2)
-                                continue
-                        else:
-                            if plain_text:
-                                yield plain_text
-                            if message["state"] == "complete":
-                                break
-                    else:
-                        retry -= 1
-                        await asyncio.sleep(1)
-                        if retry == 0:
-                            if retry == 0:
-                                raise Exception(
-                                    "Failed to get answer form poe too many times: No reply!"
-                                )
+            retry = 15
+            last_text = ""
+            got_suggest_replys = []
+            got_titles = []
+            text_finished = False
+            suggest_lost_times = 5
+            while retry >= 0 and suggest_lost_times >= 0:
+                response = await client.get(self.channel_url)
+                data = await response.json()
+                messages = [json.loads(msg_str) for msg_str in data.get("messages", "{}")]
+                got_new_text = False
+                for message in messages:
+                    payload = message.get('payload', {})
+                    if payload.get('subscription_name') == 'messageAdded':
+                        message = (payload.get("data", {})).get('messageAdded', {})
+                        plain_text = message.get("text")
+                        if plain_text == question:
                             continue
-                except asyncio.exceptions.TimeoutError as e:
-                    raise Exception(
-                        f"Failed to get message from {url_botname}:{str(e)}"
-                    ) from e
-                except Exception as e:
-                    logger.error(f"Failed to get message from {url_botname}:{str(e)}")
+                        if message and message.get("state") == "incomplete":
+                            if message.get(
+                                    "messageId") < human_message_id or plain_text == last_text:
+                                continue
+                            else:
+                                got_new_text = True
+                                retry = 15
+                                yield Text(content=plain_text[len(last_text):])
+                                last_text = plain_text
+                        else:
+                            if not text_finished:
+                                text_finished = Text
+                                yield Text(content=message.get('text')[len(last_text):])
+                            suggest_replys = message.get('suggestedReplies', [])
+                            got_new_reply = False
+                            for suggest_reply in suggest_replys:
+                                if suggest_reply not in got_suggest_replys:
+                                    suggest_lost_times = 10
+                                    got_suggest_replys.append(suggest_reply)
+                                    got_new_reply = True
+                                    yield SuggestRely(content=suggest_reply)
+                            if len(suggest_replys) >= 3:
+                                return
+                            if suggest_lost_times <= 0:
+                                logger.error("Poe didn't send enough Suggest Reply in time. Early Returned.")
+                                return
+                            if not got_new_reply:
+                                await asyncio.sleep(1)
+                                suggest_lost_times -= 1
+                    elif payload.get('subscription_name') == 'chatTitleUpdated':
+                        title = ((payload.get('data', {})).get('chatTitleUpdated', {})).get('title', "")  # noqa: E501
+                        if title and title not in got_titles:
+                            got_titles.append(title)
+                            yield ChatTiTleUpdate(content=title)
+                if not got_new_text:
                     retry -= 1
-            return
+                    await asyncio.sleep(1)
+            raise Exception("Failed to get message from poe in time.")
+
+    async def ask_stream(
+            self,
+            url_botname: str,
+            question: str,
+            chat_code: str = None,
+            with_chat_break: bool = False,
+            suggest_able: bool = True,
+    ) -> AsyncGenerator:
+        suggest_replys = []
+
+        async for data in self.ask_stream_raw(url_botname=url_botname, question=question,
+                                              chat_code=chat_code,
+                                              with_chat_break=with_chat_break,
+                                              suggest_able=suggest_able, ):
+
+            if isinstance(data, Text):
+                yield str(data)
+            elif isinstance(data, SuggestRely):
+                suggest_replys.append(str(data))
+                if len(suggest_replys) == 1:
+                    yield "\nSuggest Replys:\n"
+                yield f"{len(suggest_replys)}: {data}\n"
+            elif isinstance(data, ChatCodeUpdate):
+                yield "\nNew ChatCode: " + str(data)
 
     async def send_chat_break(self, url_botname: str, chat_code: str) -> None:
         """
@@ -988,3 +969,44 @@ class Poe_Client:
                 logger.info("Can't delete SystemBot, skipped")
         await asyncio.gather(*tasks)
         logger.info("Succeed to delete bots")
+
+    async def get_chat_history(self, url_botname: str, chat_code: str, count: int = 25,
+                               get_all: bool = False):
+        if url_botname not in self.bots.keys():
+            await self.get_botdata(url_botname)
+        if not (count or get_all):
+            raise TypeError(
+                "Please provide at least one of the following parameters: del_all=<bool>, count=<int>"
+            )
+        messages = self.bots[url_botname]['chats'][chat_code]["messagesConnection"]["edges"]
+        if len(messages) == 0:
+            logger.error(
+                f"Failed to get message history of {url_botname}: No messages found with {url_botname}"
+            )
+            return []
+        cursor = messages[0]["cursor"]
+        if not get_all and count <= len(messages):
+            return messages[-count:]
+        while get_all or (count > len(messages)):
+            result = await self.send_query(
+                "ChatListPaginationQuery",
+                {
+                    "count": 25,
+                    "cursor": cursor,
+                    "id": self.bots[url_botname]['chats'][chat_code]['id']
+                },
+            )
+            previous_messages = result["data"]["node"]["messagesConnection"]["edges"]
+            messages = previous_messages + messages
+            cursor = messages[0]["cursor"]
+            if len(previous_messages) == 0:
+                if not get_all:
+                    logger.warning(
+                        f"Only {str(len(messages))} history messages found with {url_botname}"
+                    )
+                break
+        logger.info(f"Succeed to get messages from {url_botname}")
+        if not get_all:
+            return messages[-count:]
+        else:
+            return messages

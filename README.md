@@ -1,4 +1,5 @@
 # User Guide
+
 [中文说明](README_zh_CN.md)
 
 Latest Version: 0.2.9
@@ -25,6 +26,7 @@ pip install async-poe-client
     - [9. Get Bot Data or Settings Information](#9-get-bot-data-or-settings-information)
     - [10. Delete Chat Windows with a Bot](#10-delete-chat-windows-with-a-bot)
     - [11. Get Bots Created by Others (From "Explore" Section on poe.com)](#11-get-bots-created-by-others-from-the-explore-section-on-poecom)
+    - [12. Get Bot chat history](#12-get-bot-chat-history-messages)
 
 # QA:
 
@@ -207,34 +209,81 @@ ______________________________________________________________________
 
 ### 5. Chat with a bot
 
-Function: `ask_stream()`
+(1). Function that returns pure text format:
 
+Function: ask_stream()
 Parameters:
 
 - `url_botname: str` - The URL name of the bot.
-- `chat_code: Optional[str]` - The unique identifier of a conversation window for the corresponding bot.
-- `question: str` - The content of the question.
-- `suggest_able: Optional[bool]` - Whether to display suggested replies (requires the bot to support suggested replies
-  to be included).
+- `chat_code: Optional[str]` - The unique identifier for a specific chat window of the bot.
+- `question: str` - The content of the inquiry.
+- `suggest_able: Optional[bool]` - Whether to display suggested replies (requires bot support for suggested replies to
+  be output).
 - `with_chatb_reak: Optional[bool]` - Whether to clear the bot's memory after the conversation (i.e., maintain a single
-  conversation).
+  dialogue).
 
-Returns: `AsyncGenerator` of str
+Return value: AsyncGenerator of str
 
 ```python
-# The usage of 'get_available_bots()' can be seen in item 8.
-# If chat_code is not passed, a new conversation window will be automatically created, and its chat_code can be obtained from the poe_client attribute.
+# The get_available_bots() function can be found in item 8 with usage instructions.
+# If chat_code is not provided, a new chat window will be automatically created, and its chat_code can be obtained from the poe_client's property.
 async for message in poe_client.ask_stream(url_botname='ChatGPT', question="introduce async and await"):
     print(message, end="")
-# The bot_code_dict attribute can be accessed to get a dictionary with url_botname as the key and List[chat_code] as the value. The order is from newest to oldest, and the first one is the chat_code that was just automatically createdchat_code = poe_client.bot_code_dict['ChatGPT'][0]
+
+# The bot_code_dict attribute can be accessed to get a dictionary with url_botname as the key and List[chat_code] as the value. The order is from newest to oldest, and the first one is the chat_code that was just automatically created.
+chat_code = poe_client.bot_code_dict['ChatGPT'][0]
 
 # Continue the conversation using the chat_code obtained earlier
 async for message in poe_client.ask_stream(url_botname='ChatGPT', chat_code=chat_code,
                                            question="introduce async and await"):
     print(message, end="")
 
-# If suggested replies are used and you want to get a list of suggested replies, you can extract it from the bots attribute. It will record the last suggested replies for a specific bot and conversation.
+# If suggested replies are used and you want a list of suggested replies, they can be extracted from the bots attribute, which records the last suggested reply of a bot in a specific chat.
 print(poe_client.bots['ChatGPT']['chats'][chat_code]['Suggestion'])
+```
+
+(2). Function that returns corresponding information format:
+
+Function: ask_stream_raw()
+Parameters:
+
+- `url_botname: str` - The URL name of the bot.
+- `chat_code: Optional[str]` - The unique identifier for a specific chat window of the bot.
+- `question: str` - The content of the inquiry.
+- `suggest_able: Optional[bool]` - Whether to display suggested replies (requires bot support for suggested replies to
+  be output).
+- `with_chatb_reak: Optional[bool]` - Whether to clear the bot's memory after the conversation (i.e., maintain a single
+  dialogue).
+
+Return value: AsyncGenerator of Text, SuggestRely, ChatCodeUpdate, ChatTiTleUpdate
+
+```python
+from async_poe_client import Text, SuggestRely, ChatTiTleUpdate, ChatCodeUpdate
+
+suggest_replys = []
+chat_title = None
+async for data in poe_client.ask_stream_raw(url_botname="ChatGPT", question="介绍一下微软",
+                                        suggest_able=True):
+
+    # You can use the content attribute to get the specific content of the corresponding type, or use str() directly.
+    if isinstance(data, Text):
+        """Text response"""
+        print(str(data), end="")
+    elif isinstance(data, SuggestRely):
+        """Suggested reply"""
+        suggest_replys.append(str(data))
+        if len(suggest_replys) == 1:
+            print("\nSuggest Replys:\n")
+        print(f"{len(suggest_replys)}: {data}")
+    elif isinstance(data, ChatTiTleUpdate):
+        """Chat window title update"""
+        chat_title = data
+    elif isinstance(data, ChatCodeUpdate):
+        """New chat_code"""
+        print("\nNew ChatCode: " + str(data))
+
+if chat_title:
+    print(f"\nNew Chat Title: {chat_title}")
 ```
 
 ### 6. Reset the conversation memory of a bot (without deleting chat history)
@@ -313,8 +362,8 @@ Parameters:
 
 - `url_botname: str` - The URL name of the bot.
 
-Returns:\
-A dictionary containing all chat records and partial information of the bot.
+Returns:
+A dictionary containing some chat messages and partial information of the bot.
 
 ```python
 data = await poe_client.get_botdata(url_botname="578feb1716fe43f")
@@ -394,4 +443,22 @@ bots = await poe_client.explore_bots(count=100)
 print(bots)
 bots = await poe_client.explore_bots(explore_all=True)
 print(bots)
+```
+
+### 12. Get bot chat history (messages)
+
+Function: `get_chat_history()`
+
+Parameters:
+
+- `url_botname: str` - The URL name of the bot.
+- `chat_code: str` - The chat to get
+- `count: int = 25` - The count of messages to get
+- `get_all: bool = False` - Whether to get all the chat messages
+  Returns:
+  A list of dictionary containing some chat messages of the chat.
+
+```python
+history = await poe_client.get_chat_history("ChatGPT", "chat_code", get_all=True)
+print(history)
 ```

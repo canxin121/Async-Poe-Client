@@ -23,6 +23,7 @@ pip install async-poe-client
     - [9. 获取bot的数据或设置信息](#9获取bot的数据或设置信息)
     - [10. 删除和bot的会话窗口](#10删除和某个bot的会话窗口)
     - [11. 获取其他人创建的bot(poe.com左上角explore中的bot)](#11获取其他人创建的botpoecom左上角explore中的bot)
+    - [12. 获取bot的某个chat的聊天记录](#12-获取bot聊天记录)
 
 # QA:
 
@@ -33,11 +34,11 @@ pip install async-poe-client
   2.对于自己创建的bot,url_botname =
   handle,如果设置了display_name,那么在网页上看到的名字是display_name,如果没设置,看到的就是url_botname(handle)  
   但是有特殊的情况下handle并不遵循上面的规律,比如使用get_available_bots得到的所有bot的handle都永远等于url_botname
-    
+
 - 二:chat_code是什么? ->
   一个bot可以有多个会话窗口,而chat_code是会话窗口的唯一性标志,获取的方法和url_botname类似,例如 "https://poe.com/chat/1234567890"
   中 chat_code为 1234567890
-    
+
 - 三:如何获得p_b和formkey? ->  
   1.获取p_b: 打开poe.com,F12打开调试工具,然后选择到应用程序,在cookie里有p_b一项的值  
   2.获取formkey: 打开poe.com,F12打开调试工具,然后选择到网络一项,和某个bot对话之后,可以看到gql_POST的网络请求,在其中的请求标头中后面还有单独的formkey的键值对
@@ -175,13 +176,15 @@ await poe_client.delete_bot(url_botname="test27gs2")
 
 ### 5.和bot对话
 
+(1). 返回纯text格式的函数
+
 函数:ask_stream()
 参数:
 
 - `url_botname:str` - bot的url名
 - `chat_code:Optional[str]` - 对应bot的的一个会话窗口的唯一标志
 - `question:str` - 询问的内容
-- `suggest_able:Optional[bool]` - 是否显示建议回复(需要该bot支持建议回复才能一并输出出来)
+- `suggest_able:Optional[bool] = True` - 是否显示建议回复(需要该bot支持建议回复才能一并输出出来)
 - `with_chatb_reak:Optional[bool]` - 是否在对话后清除bot的记忆(即保持单对话)
 
 返回值:str的AsyncGenerator
@@ -202,6 +205,46 @@ async for message in poe_client.ask_stream(url_botname='ChatGPT', chat_code=chat
 # 如果使用了建议回复,而且想要一个建议回复的列表,可以从bots属性中提取,它会记录某个bot某个会话的最后的建议回复
 print(poe_client.bots['ChatGPT']['chats'][chat_code]['Suggestion'])
 
+```
+
+(2). 返回对应信息格式的函数
+函数:ask_stream_raw()
+参数:
+
+- `url_botname:str` - bot的url名
+- `chat_code:Optional[str]` - 对应bot的的一个会话窗口的唯一标志
+- `question:str` - 询问的内容
+- `suggest_able:Optional[bool] = True` - 是否显示建议回复(需要该bot支持建议回复才能一并输出出来)
+- `with_chatb_reak:Optional[bool]` - 是否在对话后清除bot的记忆(即保持单对话)
+
+返回值:Text,SuggestRely,ChatCodeUpdate,ChatTiTleUpdate的AsyncGenerator
+
+```python
+from async_poe_client import Text, SuggestRely, ChatTiTleUpdate, ChatCodeUpdate
+
+suggest_replys = []
+chat_title = None
+async for data in poe_client.ask_stream_raw(url_botname="ChatGPT", question="介绍一下微软", ):
+
+    # 可以用 content属性来获得对应类型的具体内容,也可以直接str()
+    if isinstance(data, Text):
+        """纯文本回答"""
+        print(str(data), end="")
+    elif isinstance(data, SuggestRely):
+        """建议回复"""
+        suggest_replys.append(str(data))
+        if len(suggest_replys) == 1:
+            print("\nSuggest Replys:\n")
+        print(f"{len(suggest_replys)}: {data}")
+    elif isinstance(data, ChatTiTleUpdate):
+        """聊天窗口标题更新"""
+        chat_title = data
+    elif isinstance(data, ChatCodeUpdate):
+        """新的chat_code"""
+        print("\nNew ChatCode: " + str(data))
+
+if chat_title:
+    print(f"\nNew Chat Title: {chat_title}")
 ```
 
 ### 6.删除bot的对话记忆,重置对话(这并不会删除聊天记录中的消息)
@@ -274,7 +317,7 @@ await poe_client.delete_available_bots(del_all=True)
 - `url_botname:str` - 要清除记忆的bot的url_botname
 
 返回值:  
-一个包含bot的所有聊天记录和部分信息的dict
+一个包含bot的部分聊天记录和部分信息的dict
 
 ```python
 data = await poe_client.get_botdata(url_botname="578feb1716fe43f")
@@ -352,4 +395,22 @@ bots = await poe_client.explore_bots(count=100)
 print(bots)
 bots = await poe_client.explore_bots(explore_all=True)
 print(bots)
+```
+
+### 12. 获取bot聊天记录
+
+Function: `get_chat_history()`
+
+Parameters:
+
+- `url_botname: str` - bot的url名
+- `chat_code: str` - 要获取聊天记录的chat_code
+- `count: int = 25` - 要获取的消息的数量
+- `get_all: bool = False` - 是否获取所有的消息
+  Returns:
+  List[dict] dict即是一个消息
+
+```python
+history = await poe_client.get_chat_history("ChatGPT", "chat_code", get_all=True)
+print(history)
 ```
