@@ -37,7 +37,7 @@ class ChatTiTleUpdate(BaseModel):
 class ChatCodeUpdate(BaseModel):
     """新生成的chat的chat code"""
     content: str
-    type: str = "ChatInfoUpdate"
+    type: str = "ChatCodeUpdate"
 
     def __str__(self):
         return str(self.content)
