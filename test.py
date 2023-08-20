@@ -13,13 +13,13 @@ def generate_random_str(length, charset=string.ascii_lowercase + string.digits):
 
 @pytest.mark.asyncio
 async def test_get_subscription_info():
-    poe_client = await Poe_Client("p_b", "formkey").create()
+    poe_client = await Poe_Client("ltEr9IacPaOh2Cjn7xU5Gg%3D%3D", "ae869b3b2c8baefc38a15e0946e48efe").create()
     print(poe_client.subscription)
 
 
 @pytest.mark.asyncio
 async def test_explore_bots():
-    poe_client = await Poe_Client("p_b", "formkey").create()
+    poe_client = await Poe_Client("ltEr9IacPaOh2Cjn7xU5Gg%3D%3D", "ae869b3b2c8baefc38a15e0946e48efe").create()
     bots = await poe_client.explore_bots(count=100)
     print(bots)
     bots = await poe_client.explore_bots(explore_all=True)
@@ -29,7 +29,7 @@ async def test_explore_bots():
 @pytest.mark.asyncio
 async def test_get_available_bots():
     """after getting bots, the handle equals url_botname,examples in the next test"""
-    poe_client = await Poe_Client("p_b", "formkey").create()
+    poe_client = await Poe_Client("ltEr9IacPaOh2Cjn7xU5Gg%3D%3D", "ae869b3b2c8baefc38a15e0946e48efe").create()
     bots = await poe_client.get_available_bots(count=2)
     print(bots)
     bots = await poe_client.get_available_bots(get_all=True)
@@ -38,7 +38,7 @@ async def test_get_available_bots():
 
 @pytest.mark.asyncio
 async def test_stream_ask():
-    poe_client = await Poe_Client("p_b", "formkey").create()
+    poe_client = await Poe_Client("ltEr9IacPaOh2Cjn7xU5Gg%3D%3D", "ae869b3b2c8baefc38a15e0946e48efe").create()
     async for message in poe_client.ask_stream(url_botname="ChatGPT", question="introduce openai",
                                                suggest_able=True):
         print(message, end="")
@@ -48,7 +48,7 @@ async def test_stream_ask():
 
 @pytest.mark.asyncio
 async def test_chatbreak():
-    poe_client = await Poe_Client("p_b", "formkey").create()
+    poe_client = await Poe_Client("ltEr9IacPaOh2Cjn7xU5Gg%3D%3D", "ae869b3b2c8baefc38a15e0946e48efe").create()
     bot, data = list(poe_client.bots.items())[0]
     chat = list(data['chats'].values())[0]
     await poe_client.send_chat_break(url_botname=bot, chat_code=chat['chatCode'])
@@ -56,7 +56,7 @@ async def test_chatbreak():
 
 @pytest.mark.asyncio
 async def test_bot_operations():
-    poe_client = await Poe_Client("p_b", "formkey").create()
+    poe_client = await Poe_Client("ltEr9IacPaOh2Cjn7xU5Gg%3D%3D", "ae869b3b2c8baefc38a15e0946e48efe").create()
     # the handle when creating becomes the url_botname that to be used
     name1 = generate_random_str(10)
     name2 = generate_random_str(10)
@@ -70,7 +70,7 @@ async def test_bot_operations():
 @pytest.mark.asyncio
 async def test_delete_available_bots():
     """caution, this will permanently delete your bots"""
-    poe_client = await Poe_Client("p_b", "formkey").create()
+    poe_client = await Poe_Client("ltEr9IacPaOh2Cjn7xU5Gg%3D%3D", "ae869b3b2c8baefc38a15e0946e48efe").create()
     name1 = generate_random_str(10)
     name2 = generate_random_str(10)
     name3 = generate_random_str(10)
@@ -82,7 +82,7 @@ async def test_delete_available_bots():
 
 @pytest.mark.asyncio
 async def test_get_bot_data_and_info():
-    poe_client = await Poe_Client("p_b", "formkey").create()
+    poe_client = await Poe_Client("ltEr9IacPaOh2Cjn7xU5Gg%3D%3D", "ae869b3b2c8baefc38a15e0946e48efe").create()
     name1 = generate_random_str(10)
     await poe_client.create_bot(handle=name1, prompt="a ai assistant")
     data = await poe_client.get_botdata(url_botname=name1)
@@ -98,7 +98,7 @@ chat_code = ""
 @pytest.mark.asyncio
 async def test_three_messages():
     global chat_code
-    poe_client = await Poe_Client("p_b", "formkey").create()
+    poe_client = await Poe_Client("ltEr9IacPaOh2Cjn7xU5Gg%3D%3D", "ae869b3b2c8baefc38a15e0946e48efe").create()
     await poe_client.create_bot(handle=name, prompt="a ai assistant")
 
     async for message in poe_client.ask_stream(url_botname=name, question="hello"):
@@ -113,7 +113,7 @@ async def test_three_messages():
 
 @pytest.mark.asyncio
 async def test_delete_chats():
-    poe_client = await Poe_Client("p_b", "formkey").create()
+    poe_client = await Poe_Client("ltEr9IacPaOh2Cjn7xU5Gg%3D%3D", "ae869b3b2c8baefc38a15e0946e48efe").create()
     await poe_client.delete_chat_by_chat_code(chat_code)
     async for message in poe_client.ask_stream(url_botname=name, question="hello"):
         print(message, end="")
