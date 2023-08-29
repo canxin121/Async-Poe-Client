@@ -2,6 +2,12 @@
 
 [中文说明](README_zh_CN.md)
 
+Maintenance has been discontinued due to too harsh restrictions on free users.
+Maintenance has been discontinued due to too harsh restrictions on free users.
+Maintenance has been discontinued due to too harsh restrictions on free users.
+![image](https://github.com/canxin121/Async-Poe-Client/assets/69547456/f4adb7a3-7ad5-4c3b-8596-769e5716b350)
+
+
 Latest Version: 0.2.9
 This is a guide on how to use the `async-poe-Client` library. Before getting started, make sure you have installed this
 library.
