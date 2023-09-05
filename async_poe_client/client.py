@@ -265,7 +265,7 @@ class Poe_Client:
         """获取bot的信息,主要是为了获取bot的nickname,在发送消息时会用到"""
         data = await self.send_query("BotLandingPageQuery", {"botHandle": url_botname})
         if url_botname not in self.bots.keys():
-            self.bots[url_botname] = {"bot": {}, "chat": {}}
+            self.bots[url_botname] = {"bot": {}, "chats": {}}
         self.bots[url_botname]["bot"].update(data["data"]["bot"])
         return self.bots[url_botname]["bot"]
 
@@ -275,7 +275,7 @@ class Poe_Client:
         """获取bot的设置,比get_bot多了prompt等内容,在edit的时候用来保持未修改的值不变"""
         data = await self.send_query("editBotIndexPageQuery", {"botName": url_botname})
         if url_botname not in self.bots.keys():
-            self.bots[url_botname] = {"bot": {}, "chat": {}}
+            self.bots[url_botname] = {"bot": {}, "chats": {}}
         self.bots[url_botname]["bot"].update(data["data"]["bot"])
         return self.bots[url_botname]["bot"]
 
