@@ -1,12 +1,6 @@
 # 使用指南
 
-由于过于逆天的免费用户可用次数,已经停止维护.    
-由于过于逆天的免费用户可用次数,已经停止维护.    
-由于过于逆天的免费用户可用次数,已经停止维护.    
-![image](https://github.com/canxin121/Async-Poe-Client/assets/69547456/f4adb7a3-7ad5-4c3b-8596-769e5716b350)
-
-
-最新版本:0.2.9
+最新版本:0.3.3
 这是如何使用`async-poe-Client`库的指南。在开始之前，请确保你已经安装了这个库。
 
 ```
@@ -15,21 +9,27 @@ pip install async-poe-client
 
 ## 目录
 
-- [QA](#qa)
-- [步骤1: 导入库并创建Poe_Client对象](#步骤1导入库并创建poeclient对象)
-- [步骤2: 使用Poe_Client](#步骤2使用poeclient)
-    - [1. 获取账号的订阅信息](#1获取账号的订阅信息)
-    - [2. 创建一个bot](#2创建一个bot)
-    - [3. 修改一个bot的设置](#3修改一个bot的设置)
-    - [4. 删除一个bot](#4删除一个bot)
-    - [5. 和bot对话](#5和bot对话)
-    - [6. 删除bot的对话记忆,重置对话(这并不会删除聊天记录中的消息)](#6删除bot的对话记忆重置对话这并不会删除聊天记录中的消息)
-    - [7. 查询自己的可用的bot](#7查询自己的可用的bot)
-    - [8. 批量删除自己可用的bot](#8批量删除自己可用的bot)
-    - [9. 获取bot的数据或设置信息](#9获取bot的数据或设置信息)
-    - [10. 删除和bot的会话窗口](#10删除和某个bot的会话窗口)
-    - [11. 获取其他人创建的bot(poe.com左上角explore中的bot)](#11获取其他人创建的botpoecom左上角explore中的bot)
-    - [12. 获取bot的某个chat的聊天记录](#12-获取bot聊天记录)
+- [使用指南](#使用指南)
+  - [目录](#目录)
+- [QA:](#qa)
+  - [步骤1：导入库并创建Poe\_Client对象](#步骤1导入库并创建poe_client对象)
+  - [步骤2：使用Poe\_Client](#步骤2使用poe_client)
+    - [1.获取账号的订阅信息](#1获取账号的订阅信息)
+    - [2.创建一个bot](#2创建一个bot)
+    - [3.修改一个bot的设置](#3修改一个bot的设置)
+    - [4.删除一个bot](#4删除一个bot)
+    - [5.和bot对话](#5和bot对话)
+    - [6.停止chat的回复生成](#6停止chat的回复生成)
+    - [7.删除bot的对话记忆,重置对话(这并不会删除聊天记录中的消息)](#7删除bot的对话记忆重置对话这并不会删除聊天记录中的消息)
+    - [8.查询自己的可用的bot](#8查询自己的可用的bot)
+    - [9.批量删除自己可用的bot](#9批量删除自己可用的bot)
+    - [10.获取bot的数据或设置信息](#10获取bot的数据或设置信息)
+    - [11.删除和某个bot的会话窗口](#11删除和某个bot的会话窗口)
+      - [(1). 删除和某个bot的指定会话窗口](#1-删除和某个bot的指定会话窗口)
+      - [(2). 删除和某个bot的指定数量的会话窗口](#2-删除和某个bot的指定数量的会话窗口)
+    - [12.获取其他人创建的bot(poe.com左上角explore中的bot)](#12获取其他人创建的botpoecom左上角explore中的bot)
+    - [13.按数量获取bot的聊天窗口](#13按数量获取bot的聊天窗口)
+    - [14. 获取bot聊天记录](#14-获取bot聊天记录)
 
 # QA:
 
@@ -252,8 +252,18 @@ async for data in poe_client.ask_stream_raw(url_botname="ChatGPT", question="介
 if chat_title:
     print(f"\nNew Chat Title: {chat_title}")
 ```
+### 6.停止chat的回复生成
+函数:stop_chat()
+参数:
 
-### 6.删除bot的对话记忆,重置对话(这并不会删除聊天记录中的消息)
+- `chat_code:str` - 要停止回复生成的对应bot的会话窗口的chat code
+
+返回值:None
+```python
+await poe_client.stop_chat(chatcode)
+```
+
+### 7.删除bot的对话记忆,重置对话(这并不会删除聊天记录中的消息)
 
 函数:send_chat_break()
 
@@ -269,7 +279,7 @@ await poe_client.send_chat_break(url_botname="Assistant", chat_code="chat_code")
 
 ---
 
-### 7.查询自己的可用的bot
+### 8.查询自己的可用的bot
 
 注意查询的顺序是按照poe.com左侧边栏的顺序从上往下查询的  
 函数:get_available_bots()
@@ -293,7 +303,7 @@ print(bots)
 
 ---
 
-### 8.批量删除自己可用的bot
+### 9.批量删除自己可用的bot
 
 注意删除顺序是按照poe.com左侧边栏的顺序从上往下查询的,并且如果碰到系统自带的bot,会直接跳过,但是也计算在数量之中了
 
@@ -314,9 +324,9 @@ await poe_client.delete_available_bots(del_all=True)
 
 ---
 
-### 9.获取bot的数据或设置信息
+### 10.获取bot的数据或设置信息
 
-函数: get_botdata()
+函数: get_bot()
 
 参数:
 
@@ -330,7 +340,7 @@ data = await poe_client.get_botdata(url_botname="578feb1716fe43f")
 print(data)
 ```
 
-函数:get_bot_info()
+函数:get_bot_setting()
 
 参数:
 
@@ -346,7 +356,7 @@ print(info)
 
 ---
 
-### 10.删除和某个bot的会话窗口
+### 11.删除和某个bot的会话窗口
 
 注意: 这个操作是不可逆的!
 
@@ -383,7 +393,7 @@ await poe_client.delete_chat_by_count(url_botname="ChatGPT", del_all=True)
 
 ---
 
-### 11.获取其他人创建的bot(poe.com左上角explore中的bot)
+### 12.获取其他人创建的bot(poe.com左上角explore中的bot)
 
 注意获取的顺序是从上到下,按照poe.com的顺序获取的
 
@@ -402,19 +412,34 @@ print(bots)
 bots = await poe_client.explore_bots(explore_all=True)
 print(bots)
 ```
+### 13.按数量获取bot的聊天窗口
+函数: `get_chat_list()`
+参数:
 
-### 12. 获取bot聊天记录
+- `url_botname: str` - bot的url名
+- `count: int = 25` - 要获取的消息的数量
+- `get_all: bool = False` - 是否获取所有的聊天窗口
+  
+返回值:
+A list of dictionary containing some or all chats of the bot.
 
-Function: `get_chat_history()`
+```python
+history = await poe_client.get_chat_list("ChatGPT", get_all=True)
+print(history)
+```
 
-Parameters:
+### 14. 获取bot聊天记录
+
+函数: `get_chat_history()`
+
+参数:
 
 - `url_botname: str` - bot的url名
 - `chat_code: str` - 要获取聊天记录的chat_code
 - `count: int = 25` - 要获取的消息的数量
 - `get_all: bool = False` - 是否获取所有的消息
-  Returns:
-  List[dict] dict即是一个消息
+返回值:
+  `List[dict]` dict即是一个消息
 
 ```python
 history = await poe_client.get_chat_history("ChatGPT", "chat_code", get_all=True)

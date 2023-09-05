@@ -2,13 +2,7 @@
 
 [中文说明](README_zh_CN.md)
 
-Maintenance has been discontinued due to too harsh restrictions on free users.  
-Maintenance has been discontinued due to too harsh restrictions on free users.  
-Maintenance has been discontinued due to too harsh restrictions on free users.  
-![image](https://github.com/canxin121/Async-Poe-Client/assets/69547456/f4adb7a3-7ad5-4c3b-8596-769e5716b350)
-
-
-Latest Version: 0.2.9
+Latest Version: 0.3.3
 This is a guide on how to use the `async-poe-Client` library. Before getting started, make sure you have installed this
 library.
 
@@ -18,21 +12,27 @@ pip install async-poe-client
 
 ## Table of Contents
 
-- [QA](#qa)
-- [Step 1: Import Libraries and Create Poe_Client Object](#step-1-import-the-library-and-create-a-poeclient-object)
-- [Step 2: Using Poe_Client](#step-2-using-poeclient)
-    - [1. Get Subscription Information](#1-get-subscription-information-for-an-account)
-    - [2. Create a Bot](#2-create-a-bot)
-    - [3. Modify Bot Settings](#3-modify-the-settings-of-a-bot)
-    - [4. Delete a Bot](#4-delete-a-bot)
-    - [5. Chat with a Bot](#5-chat-with-a-bot)
-    - [6. Clear Bot's Conversation Memory and Reset Dialogue (Does Not Delete Chat Messages)](#6-reset-the-conversation-memory-of-a-bot-without-deleting-chat-history)
-    - [7. Retrieve User's Available Bots](#7-get-available-bots)
-    - [8. Batch Delete User's Available Bots](#8-batch-delete-available-bots)
-    - [9. Get Bot Data or Settings Information](#9-get-bot-data-or-settings-information)
-    - [10. Delete Chat Windows with a Bot](#10-delete-chat-windows-with-a-bot)
-    - [11. Get Bots Created by Others (From "Explore" Section on poe.com)](#11-get-bots-created-by-others-from-the-explore-section-on-poecom)
-    - [12. Get Bot chat history](#12-get-bot-chat-history-messages)
+- [User Guide](#user-guide)
+  - [Table of Contents](#table-of-contents)
+- [QA:](#qa)
+  - [Step 1: Import the library and create a Poe\_Client object](#step-1-import-the-library-and-create-a-poe_client-object)
+  - [Step 2: Using Poe\_Client](#step-2-using-poe_client)
+    - [1. Get subscription information for an account](#1-get-subscription-information-for-an-account)
+    - [2. Create a bot](#2-create-a-bot)
+    - [3. Modify the settings of a bot](#3-modify-the-settings-of-a-bot)
+    - [4. Delete a bot](#4-delete-a-bot)
+    - [5. Chat with a bot](#5-chat-with-a-bot)
+    - [6.Stop chat answer generating](#6stop-chat-answer-generating)
+    - [7. Reset the conversation memory of a bot (without deleting chat history)](#7-reset-the-conversation-memory-of-a-bot-without-deleting-chat-history)
+    - [8. Get available bots](#8-get-available-bots)
+    - [9. Batch delete available bots](#9-batch-delete-available-bots)
+    - [10. Get bot data or settings information](#10-get-bot-data-or-settings-information)
+    - [11. Delete chat windows with a bot](#11-delete-chat-windows-with-a-bot)
+      - [(1) Delete a specific chat window with a bot](#1-delete-a-specific-chat-window-with-a-bot)
+      - [(2) Delete a specified number of chat windows with a bot](#2-delete-a-specified-number-of-chat-windows-with-a-bot)
+    - [12. Get bots created by others (from the "Explore" section on poe.com)](#12-get-bots-created-by-others-from-the-explore-section-on-poecom)
+    - [13. Get bot chat list](#13-get-bot-chat-list)
+    - [14. Get bot chat history (messages)](#14-get-bot-chat-history-messages)
 
 # QA:
 
@@ -291,8 +291,17 @@ async for data in poe_client.ask_stream_raw(url_botname="ChatGPT", question="介
 if chat_title:
     print(f"\nNew Chat Title: {chat_title}")
 ```
+### 6.Stop chat answer generating
+Function:stop_chat()
+Parameters:
 
-### 6. Reset the conversation memory of a bot (without deleting chat history)
+- `chat_code:str` - The unique identifier of the conversation to be stoped.
+
+Returns: `None`
+```python
+await poe_client.stop_chat(chatcode)
+```
+### 7. Reset the conversation memory of a bot (without deleting chat history)
 
 Function: `send_chat_break()`
 
@@ -309,7 +318,7 @@ await poe_client.send_chat_break(url_botname="Assistant", chat_code="chat_code")
 
 ______________________________________________________________________
 
-### 7. Get available bots
+### 8. Get available bots
 
 Note that the order of retrieval is based on the order in the left sidebar of poe.com, from top to bottom.
 
@@ -335,7 +344,7 @@ print(bots)
 
 ______________________________________________________________________
 
-### 8. Batch delete available bots
+### 9. Batch delete available bots
 
 Note that the deletion order is based on the order in the left sidebar of poe.com, and if a system bot is encountered,
 it will be skipped. However, it is counted in the quantity.
@@ -360,9 +369,9 @@ await poe_client.delete_available_bots(del_all=True)
 
 ---
 
-### 9. Get bot data or settings information
+### 10. Get bot data or settings information
 
-Function: `get_botdata()`
+Function: `get_bot()`
 
 Parameters:
 
@@ -376,7 +385,7 @@ data = await poe_client.get_botdata(url_botname="578feb1716fe43f")
 print(data)
 ```
 
-Function: `get_bot_info()`
+Function: `get_bot_setting()`
 
 Parameters:
 
@@ -393,7 +402,7 @@ print(info)
 
 ______________________________________________________________________
 
-### 10. Delete chat windows with a bot
+### 11. Delete chat windows with a bot
 
 Note: This operation is irreversible!
 
@@ -430,7 +439,7 @@ await poe_client.delete_chat_by_count(url_botname="ChatGPT", del_all=True)
 
 ______________________________________________________________________
 
-### 11. Get bots created by others (from the "Explore" section on poe.com)
+### 12. Get bots created by others (from the "Explore" section on poe.com)
 
 Note that the retrieval order is from top to bottom, based on the order on poe.com.
 
@@ -450,8 +459,22 @@ print(bots)
 bots = await poe_client.explore_bots(explore_all=True)
 print(bots)
 ```
+### 13. Get bot chat list
+Function: `get_chat_list()`
+Parameters:
 
-### 12. Get bot chat history (messages)
+- `url_botname: str` - The URL name of the bot.
+- `count: int = 25` - The count of messages to get
+- `get_all: bool = False` - Whether to get all the chats
+  Returns:
+  A list of dictionary containing some or all chats of the bot.
+
+```python
+history = await poe_client.get_chat_list("ChatGPT", get_all=True)
+print(history)
+```
+
+### 14. Get bot chat history (messages)
 
 Function: `get_chat_history()`
 

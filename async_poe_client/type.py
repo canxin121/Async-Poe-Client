@@ -3,7 +3,10 @@ from pydantic import BaseModel
 
 class Text(BaseModel):
     """普通文本信息,可以实现加法"""
+
     content: str
+    msg_id: int
+    finished: bool
     type: str = "Text"
 
     def __add__(self, other):
@@ -16,8 +19,15 @@ class Text(BaseModel):
         return self.content
 
 
+class TextCancel(BaseModel):
+    """普通文本消息取消,但是建议回复不一定结束"""
+
+    type: str = "TextCancel"
+
+
 class SuggestRely(BaseModel):
     """建议回复信息"""
+
     content: str
     type: str = "SuggestRely"
 
@@ -27,6 +37,7 @@ class SuggestRely(BaseModel):
 
 class ChatTiTleUpdate(BaseModel):
     """聊天窗口标题变更信息"""
+
     content: str
     type: str = "ChatTiTleUpdate"
 
@@ -36,6 +47,7 @@ class ChatTiTleUpdate(BaseModel):
 
 class ChatCodeUpdate(BaseModel):
     """新生成的chat的chat code"""
+
     content: str
     type: str = "ChatCodeUpdate"
 
