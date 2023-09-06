@@ -29,6 +29,7 @@ class SuggestRely(BaseModel):
     """建议回复信息"""
 
     content: str
+    msg_id: int
     type: str = "SuggestRely"
 
     def __str__(self):

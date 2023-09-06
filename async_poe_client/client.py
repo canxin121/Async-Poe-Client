@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 import asyncio
 import hashlib
 import json
@@ -9,8 +10,8 @@ import uuid
 from typing import Dict, List, Optional, Tuple, Union
 
 import aiohttp
-from aiohttp_socks import ProxyConnector
 from aiohttp import client_exceptions
+from aiohttp_socks import ProxyConnector
 from loguru import logger
 
 from .type import ChatCodeUpdate, ChatTiTleUpdate, SuggestRely, Text, TextCancel
@@ -565,7 +566,7 @@ class Poe_Client:
         ][0]["messageId"], data["chatCode"]
 
     # 向一个原有的会话发送消息
-    async def send_message_to_orgion_chat(
+    async def send_message_to_origin_chat(
         self,
         chat_code: str,
         url_botname: str,
@@ -665,7 +666,10 @@ class Poe_Client:
                                         "suggestedReplies", []
                                     ):
                                         self.queues[chat_id].put(
-                                            SuggestRely(content=suggest_reply)
+                                            SuggestRely(
+                                                content=suggest_reply,
+                                                msg_id=message.get("messageId"),
+                                            )
                                         )
 
                                 elif subscription_name == "chatTitleUpdated":
@@ -719,7 +723,7 @@ class Poe_Client:
                         )
                         return human_msg_id, ChatCodeUpdate(content=chat_code_)
                     else:
-                        human_msg_id = await self.send_message_to_orgion_chat(
+                        human_msg_id = await self.send_message_to_origin_chat(
                             chat_code, url_botname, question, with_chat_break
                         )
                         return human_msg_id, None
@@ -769,14 +773,15 @@ class Poe_Client:
                 elif isinstance(data, TextCancel):
                     break
                 elif isinstance(data, SuggestRely) and suggest_able:
-                    if data not in suggests:
-                        suggests.append(data)
-                        lost_time = 10
-                        yield data
-                        if len(suggests) >= 3:
-                            break
-                    else:
-                        continue
+                    if data.msg_id > human_msg_id:
+                        if data not in suggests:
+                            suggests.append(data)
+                            lost_time = 10
+                            yield data
+                            if len(suggests) >= 3:
+                                break
+                        else:
+                            continue
                 elif isinstance(data, ChatTiTleUpdate):
                     yield data
             except Exception:
