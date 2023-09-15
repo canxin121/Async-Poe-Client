@@ -265,8 +265,7 @@ class Poe_Client:
     async def get_bot(self, url_botname: str) -> dict:
         """获取bot的信息,主要是为了获取bot的nickname,在发送消息时会用到"""
         data = await self.send_query("BotLandingPageQuery", {"botHandle": url_botname})
-        if url_botname not in self.bots.keys():
-            self.bots[url_botname] = {"bot": {}, "chats": {}}
+        await self.ensure_botchat(url_botname, load=False)
         self.bots[url_botname]["bot"].update(data["data"]["bot"])
         return self.bots[url_botname]["bot"]
 
@@ -552,6 +551,11 @@ class Poe_Client:
                 "attachments": [],
             },
         )
+        status = message_data["data"]["messageEdgeCreate"]["status"]
+        if status == "reached_limit":
+            raise Exception(f"Daily limit reached for {url_botname}.")
+        elif status != "success":
+            raise Exception(status)
         data = message_data["data"]["messageEdgeCreate"]["chat"]
         self.bots[url_botname]["chats"] = {
             data["chatCode"]: data,
@@ -939,5 +943,7 @@ class Poe_Client:
                 self.bots[url_botname] = {"bot": {}, "chats": {}}
             if "chats" not in self.bots[url_botname].keys():
                 self.bots[url_botname]["chats"] = {}
-            if chat_code not in self.bots[url_botname]["chats"].keys():
+            if "bot" not in self.bots[url_botname].keys():
+                self.bots[url_botname]["bot"] = {}
+            if chat_code and chat_code not in self.bots[url_botname]["chats"].keys():
                 self.bots[url_botname]["chats"][chat_code] = {}
