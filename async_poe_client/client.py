@@ -10,7 +10,6 @@ import uuid
 from typing import Dict, List, Optional, Tuple, Union
 
 import aiohttp
-from aiohttp import client_exceptions
 from aiohttp_socks import ProxyConnector
 from loguru import logger
 
@@ -31,8 +30,8 @@ class Poe_Client:
         self.channel_url: str = ""
         self.bots: dict = {}
         self.queues: Dict[str, queue.Queue] = {}
+        self.wss = None
         self.wss_task: asyncio.Task = None
-        self.wss_lock: asyncio.Lock = asyncio.Lock()
         self.bot_lock: Dict[str, asyncio.Lock] = {}
         self.bot_crt_msg_id: Dict[str, int] = {}
         self.chat_lock: Dict[str, asyncio.Lock] = {}
@@ -129,7 +128,7 @@ class Poe_Client:
             json_data = json.loads(data)
             self.tchannel_data = json_data["tchannelData"]
             self.headers["Poe-Tchannel"] = self.tchannel_data["channel"]
-            self.channel_url = f'https://{self.ws_domain}.tch.{self.tchannel_data["baseHost"]}/up/{self.tchannel_data["boxName"]}/updates?min_seq={self.tchannel_data["minSeq"]}&channel={self.tchannel_data["channel"]}&hash={self.tchannel_data["channelHash"]}'
+            self.channel_url = f'wss://{self.ws_domain}.tch.{self.tchannel_data["baseHost"]}/up/{self.tchannel_data["boxName"]}/updates?min_seq={self.tchannel_data["minSeq"]}&channel={self.tchannel_data["channel"]}&hash={self.tchannel_data["channelHash"]}'
             logger.info("succeed to get channel data")
 
     # chat 会话获取和操作
@@ -616,16 +615,16 @@ class Poe_Client:
     async def restart_pulling_message(self):
         logger.info("restaring pulling message. ---")
 
+        if self.wss_task and (not self.wss_task.done()):
+            self.wss_task.cancel()
+
         @async_retry(3, "Failed to refresh wss channel")
         async def refresh_wss_channel():
-            async with self.wss_lock:
-                await self.get_channel_data()
-                await self.subscribe()
+            await self.get_channel_data()
+            await self.subscribe()
 
         await refresh_wss_channel()
 
-        if self.wss_task and (not self.wss_task.done()):
-            self.wss_task.cancel()
         self.wss_task = asyncio.create_task(self.put_message())
 
     # 向queue中放消息
@@ -634,67 +633,66 @@ class Poe_Client:
     ):
         try:
             async with aiohttp.ClientSession(**self.session_args) as client:
-                async with client.ws_connect(self.channel_url) as wss:
-                    while not wss.closed:
-                        await asyncio.sleep(0.1)
-                        try:
-                            data = await wss.receive_json(timeout=3)
-                            if (
-                                data.get("error") == "missed_messages"
-                                or data.get("message_type") == "refetchChannel"
-                            ):
-                                await wss.close()
-                                await self.restart_pulling_message()
-                                break
-                            messages = [
-                                json.loads(msg_str)
-                                for msg_str in data.get("messages", "{}")
-                            ]
-                            for message in messages:
-                                payload = message.get("payload", {})
-                                chat_id = payload.get("unique_id").split(":")[-1]
-                                subscription_name = payload.get("subscription_name")
-                                if subscription_name == "messageAdded":
-                                    message = (payload.get("data", {})).get(
-                                        "messageAdded", {}
+                self.wss = await client.ws_connect(self.channel_url)
+                while not self.wss.closed:
+                    await asyncio.sleep(0.1)
+                    try:
+                        data = await self.wss.receive_json(timeout=3)
+                        if (
+                            data.get("error") == "missed_messages"
+                            or data.get("message_type") == "refetchChannel"
+                        ):
+                            await self.wss.close()
+                            await self.restart_pulling_message()
+                            break
+                        messages = [
+                            json.loads(msg_str)
+                            for msg_str in data.get("messages", "{}")
+                        ]
+                        for message in messages:
+                            payload = message.get("payload", {})
+                            chat_id = payload.get("unique_id").split(":")[-1]
+                            subscription_name = payload.get("subscription_name")
+                            if subscription_name == "messageAdded":
+                                message = (payload.get("data", {})).get(
+                                    "messageAdded", {}
+                                )
+                                self.queues[chat_id].put(
+                                    Text(
+                                        content=message.get("text"),
+                                        msg_id=message.get("messageId"),
+                                        finished=message.get("state") == "complete",
                                     )
+                                )
+
+                                for suggest_reply in message.get(
+                                    "suggestedReplies", []
+                                ):
                                     self.queues[chat_id].put(
-                                        Text(
-                                            content=message.get("text"),
+                                        SuggestRely(
+                                            content=suggest_reply,
                                             msg_id=message.get("messageId"),
-                                            finished=message.get("state") == "complete",
                                         )
                                     )
 
-                                    for suggest_reply in message.get(
-                                        "suggestedReplies", []
-                                    ):
-                                        self.queues[chat_id].put(
-                                            SuggestRely(
-                                                content=suggest_reply,
-                                                msg_id=message.get("messageId"),
-                                            )
-                                        )
-
-                                elif subscription_name == "chatTitleUpdated":
-                                    title = (
-                                        (payload.get("data", {})).get(
-                                            "chatTitleUpdated", {}
-                                        )
-                                    ).get("title", "")
-                                    self.queues[chat_id].put(
-                                        ChatTiTleUpdate(content=title)
+                            elif subscription_name == "chatTitleUpdated":
+                                title = (
+                                    (payload.get("data", {})).get(
+                                        "chatTitleUpdated", {}
                                     )
-                                elif subscription_name == "messageCancelled":
-                                    self.queues[chat_id].put(TextCancel())
-                                # else:
-                                #     logger.info(
-                                #         f"Unprocessed type: {subscription_name}"
-                                #     )
-                        except Exception:
-                            pass
+                                ).get("title", "")
+                                self.queues[chat_id].put(ChatTiTleUpdate(content=title))
+                            elif subscription_name == "messageCancelled":
+                                self.queues[chat_id].put(TextCancel())
+                            # else:
+                            #     logger.info(
+                            #         f"Unprocessed type: {subscription_name}"
+                            #     )
+                    except Exception:
+                        pass
             await self.restart_pulling_message()
-        except client_exceptions.ClientConnectorError:
+        except Exception as e:
+            logger.warning(f"Failed to set up wss: {e}.\nRetrying...")
             await self.restart_pulling_message()
 
     # 分类别的询问生成器
@@ -706,12 +704,11 @@ class Poe_Client:
         with_chat_break: bool = False,
         suggest_able: bool = True,
     ):
-        while self.wss_lock.locked():
-            await asyncio.sleep(1)
-        if not self.wss_task or self.wss_task.done():
-            await self.restart_pulling_message()
-
-        await self.ensure_botchat(url_botname)
+        tasks = [
+            asyncio.create_task(self.ensure_wss()),
+            asyncio.create_task(self.ensure_botchat(url_botname)),
+        ]
+        await asyncio.gather(*tasks)
 
         suggest_able = suggest_able and self.bots[url_botname]["bot"].get(
             "hasSuggestedReplies", False
@@ -719,18 +716,17 @@ class Poe_Client:
 
         @async_retry(3, f"Failed to send msg to {url_botname}")
         async def send_msg(chat_code):
-            async with self.wss_lock:
-                async with self.bot_lock[url_botname]:
-                    if not chat_code:
-                        human_msg_id, chat_code_ = await self.send_message_to_new_chat(
-                            url_botname, question
-                        )
-                        return human_msg_id, ChatCodeUpdate(content=chat_code_)
-                    else:
-                        human_msg_id = await self.send_message_to_origin_chat(
-                            chat_code, url_botname, question, with_chat_break
-                        )
-                        return human_msg_id, None
+            async with self.bot_lock[url_botname]:
+                if not chat_code:
+                    human_msg_id, chat_code_ = await self.send_message_to_new_chat(
+                        url_botname, question
+                    )
+                    return human_msg_id, ChatCodeUpdate(content=chat_code_)
+                else:
+                    human_msg_id = await self.send_message_to_origin_chat(
+                        chat_code, url_botname, question, with_chat_break
+                    )
+                    return human_msg_id, None
 
         human_msg_id, data = await send_msg(chat_code)
 
@@ -947,3 +943,32 @@ class Poe_Client:
                 self.bots[url_botname]["bot"] = {}
             if chat_code and chat_code not in self.bots[url_botname]["chats"].keys():
                 self.bots[url_botname]["chats"][chat_code] = {}
+
+    async def ensure_wss(self):
+        def is_wss_well():
+            return (
+                not self.wss
+                or self.wss.closed
+                or not self.wss_task
+                or self.wss_task.done()
+            )
+
+        if is_wss_well():
+            await self.restart_pulling_message()
+
+        async def maintain_wss():
+            retry = 5
+            while is_wss_well() and retry > 0:
+                retry -= 1
+                await asyncio.sleep(1)
+            if retry <= 0:
+                await self.restart_pulling_message()
+                return False
+            else:
+                return True
+
+        well = await maintain_wss()
+        if not well:
+            well = await maintain_wss()
+            if not well:
+                raise RuntimeError("Failed to maintain the wss")
